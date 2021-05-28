@@ -47,12 +47,21 @@ MainWindow::MainWindow(QWidget *parent) :
 void MainWindow::on4WindowsCheck(int check)
 {
     if (check) {
+        ui->action2Windows->setChecked(false);
         if (m_vpSplitters.empty())
             create4Windows();
         else
             show4Windows();
+        if (m_vpImageItems.empty())
+            openImages4Windows();
     } else {
         hide4Windows();
+    }
+}
+
+void MainWindow::on2WindowsCheck(int check) {
+    if (check) {
+        ui->action4Windows->setChecked(false);
     }
 }
 
@@ -87,17 +96,21 @@ void MainWindow::changeColorSpace(ColorSpace s)
     m_colorSpace = s;
 
     openImages4Windows();
+
+    for (int i = 0; i < m_vpImageView.count(); ++i) {
+        m_vpImageView[i].get()->view()->scene()->update();
+    }
 }
 
 void MainWindow::create4Windows()
 {
-    QSplitter *h1Splitter = new QSplitter(this);
-    QSplitter *h2Splitter = new QSplitter(this);
+    QSharedPointer<QSplitter> h1Splitter = QSharedPointer<QSplitter>(new QSplitter(this));
+    QSharedPointer<QSplitter> h2Splitter = QSharedPointer<QSplitter>(new QSplitter(this));
 
-    QSplitter *vSplitter = new QSplitter;
+    QSharedPointer<QSplitter> vSplitter = QSharedPointer<QSplitter> (new QSplitter);
     vSplitter->setOrientation(Qt::Vertical);
-    vSplitter->addWidget(h1Splitter);
-    vSplitter->addWidget(h2Splitter);
+    vSplitter->addWidget(h1Splitter.get());
+    vSplitter->addWidget(h2Splitter.get());
 
     h1Splitter->addWidget(m_view);
 
@@ -121,9 +134,9 @@ void MainWindow::create4Windows()
     h2Splitter->addWidget(m_vpImageView.last().get());
 
     QHBoxLayout *layout = new QHBoxLayout;
-    layout->addWidget(vSplitter);
+    layout->addWidget(vSplitter.get());
     setLayout(layout);
-    setCentralWidget(vSplitter);
+    setCentralWidget(vSplitter.get());
 
     //QSignalMapper mapper(this);
     // mapper.setMapping(m_view, 0);
@@ -139,6 +152,10 @@ void MainWindow::create4Windows()
         connect(this, &MainWindow::scaleChanged, m_vpImageView[i].get(), &ImageView::zoomIn);
         connect(this, &MainWindow::angleChanged, m_vpImageView[i].get(), &ImageView::rotate);
     }
+
+    m_vpSplitters.push_back(h1Splitter);
+    m_vpSplitters.push_back(h2Splitter);
+    m_vpSplitters.push_back(vSplitter);
 }
 
 void MainWindow::openImages4Windows()
@@ -152,6 +169,7 @@ void MainWindow::openImages4Windows()
             QGraphicsScene *scene = new QGraphicsScene(this);
             scene->addItem(m_vpImageItems[i].get());
             m_vpImageView[i]->view()->setScene(scene);
+            scene->update();
         }
         m_vpImageItems[i]->setFiltered(getChannel(m_item->getImage(), m_colorSpace, i));
     }
@@ -193,6 +211,8 @@ MainWindow::openImage() {
     m_item->setImage(m_image);
 
     openImages4Windows();
+
+    m_scene->update();
 
     return 0;
 }
