@@ -14,10 +14,15 @@ class QDockWidget;
 class ImageView;
 QT_END_NAMESPACE
 
-
 namespace Ui {
 class MainWindow;
 }
+
+enum WindowsSplitters {
+    HSplitter1, // First (top) horizontal splitter
+    HSplitter2, // Second (bottom) horizontal splitter
+    VSplitter // Vertical splitter
+};
 
 class MainWindow : public QMainWindow
 {
@@ -29,9 +34,11 @@ public:
 
 private:
     void create4Windows();
+    void create2Windows();
     void openImages4Windows();
     void show4Windows();
     void hide4Windows();
+    void removeAdditionalWindows();
     // void changeColorSpace(QColor::Spec s);
     void changeColorSpace(ColorSpace s);
 
@@ -47,6 +54,7 @@ private slots:
     void onAddHSplitter();
     void onAddDockWidget();
     void on4WindowsCheck(int check);
+    void on2WindowsCheck(int check);
     void onActionRGB();
     void onActionHSV();
     void onActionHSI();
@@ -55,12 +63,14 @@ private slots:
 private:
     Ui::MainWindow *ui;
     // Main Scene
-    QGraphicsScene *m_scene;
-    ImageView      *m_view;
+    QSharedPointer<QGraphicsScene> m_scene;
+    QSharedPointer<ImageView> m_view;
     QImage          m_image;
     QString         m_img_path;
-    ImageItem      *m_item;
-    //
+    QSharedPointer<ImageItem> m_item;
+    // 3 Additional image viewers. Indexed clockwise
+    // main window 0
+    //           1 2
     QVector<QSharedPointer<QSplitter> > m_vpSplitters;
     // Scenes created after splitters
     // QVector<QSharedPointer<QGraphicsScene> > m_vpScene;

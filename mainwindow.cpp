@@ -15,17 +15,17 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    m_scene = new QGraphicsScene(this);
+    m_scene = QSharedPointer<QGraphicsScene>(new QGraphicsScene(this));
     // ui->graphicsView->setScene(m_scene);
 
 
-    m_item = new ImageItem();
-    m_scene->addItem(m_item);
+    m_item = QSharedPointer<ImageItem>(new ImageItem());
+    m_scene->addItem(m_item.get());
 
-    m_view = new ImageView("Main view");
-    m_view->view()->setScene(m_scene);
+    m_view = QSharedPointer<ImageView>(new ImageView("Main view"));
+    m_view->view()->setScene(m_scene.get());
 
-    setCentralWidget(m_view);
+    setCentralWidget(m_view.get());
 
     connect(ui->actionOpen_image, &QAction::triggered, this, &MainWindow::openImage);
     //  ToDo: create shortcuts
@@ -34,19 +34,22 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionAddDockWidget, &QAction::triggered, this, &MainWindow::onAddDockWidget);
     // connect(ui->actionSimultaneousScroll, &QAction::chan, this, &MainWindow::onSimultaneousScrollCheck);
     connect(ui->action4Windows, &QAction::triggered, this, &MainWindow::on4WindowsCheck);
+    connect(ui->action2Windows, &QAction::triggered, this, &MainWindow::on2WindowsCheck);
+
     connect(ui->actionRGB, &QAction::triggered, this, &MainWindow::onActionRGB);
     connect(ui->actionHSV, &QAction::triggered, this, &MainWindow::onActionHSV);
     connect(ui->actionHSI, &QAction::triggered, this, &MainWindow::onActionHSI);
 
-    connect(m_view, &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
-    connect(m_view, &ImageView::angleChanged, this, &MainWindow::angleChanged);
-    connect(this, &MainWindow::scaleChanged, m_view, &ImageView::zoomIn);
-    connect(this, &MainWindow::angleChanged, m_view, &ImageView::rotate);
+    connect(m_view.get(), &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
+    connect(m_view.get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
+    connect(this, &MainWindow::scaleChanged, m_view.get(), &ImageView::zoomIn);
+    connect(this, &MainWindow::angleChanged, m_view.get(), &ImageView::rotate);
 }
 
 void MainWindow::on4WindowsCheck(int check)
 {
     if (check) {
+        removeAdditionalWindows();
         ui->action2Windows->setChecked(false);
         if (m_vpSplitters.empty())
             create4Windows();
@@ -61,7 +64,13 @@ void MainWindow::on4WindowsCheck(int check)
 
 void MainWindow::on2WindowsCheck(int check) {
     if (check) {
+        removeAdditionalWindows();
         ui->action4Windows->setChecked(false);
+        create2Windows();
+        if (m_vpImageItems.empty())
+            openImages4Windows();
+    } else {
+
     }
 }
 
@@ -107,27 +116,23 @@ void MainWindow::create4Windows()
     QSharedPointer<QSplitter> h1Splitter = QSharedPointer<QSplitter>(new QSplitter(this));
     QSharedPointer<QSplitter> h2Splitter = QSharedPointer<QSplitter>(new QSplitter(this));
 
-    QSharedPointer<QSplitter> vSplitter = QSharedPointer<QSplitter> (new QSplitter);
+    QSharedPointer<QSplitter> vSplitter = QSharedPointer<QSplitter> (new QSplitter(this));
     vSplitter->setOrientation(Qt::Vertical);
     vSplitter->addWidget(h1Splitter.get());
     vSplitter->addWidget(h2Splitter.get());
 
-    h1Splitter->addWidget(m_view);
+    h1Splitter->addWidget(m_view.get());
 
-    // QSharedPointer<ImageView> view (new ImageView("Top right view"));
     m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Top right view")));
     QGraphicsScene *scene = new QGraphicsScene(this);
     m_vpImageView.last()->view()->setScene(scene);
     h1Splitter->addWidget(m_vpImageView.last().get());
-    //m_vpImageView.push_back(view);
 
-    //view = new ImageView("Bottom left view");
     m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom left view")));
     scene = new QGraphicsScene(this);
     m_vpImageView.last()->view()->setScene(scene);
     h2Splitter->addWidget(m_vpImageView.last().get());
 
-    //view = new ImageView("Bottom right view");
     m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom right view")));
     scene = new QGraphicsScene(this);
     m_vpImageView.last()->view()->setScene(scene);
@@ -138,15 +143,7 @@ void MainWindow::create4Windows()
     setLayout(layout);
     setCentralWidget(vSplitter.get());
 
-    //QSignalMapper mapper(this);
-    // mapper.setMapping(m_view, 0);
-    // connect(m_view, &ImageView::scaleChanged, &mapper, &QSignalMapper::map);
-    // connect(m_view, SIGNAL(scaleChanged(double)), &mapper, SLOT(map()));
     for (int i = 0; i < m_vpImageView.size(); ++i) {
-        // mapper.setMapping(m_vpImageView[i].get(), i + 1);
-        // connect(m_vpImageView[i].get(), &ImageView::scaleChanged, &mapper, &QSignalMapper::map);
-        // connect(m_vpImageView[i].get(), SIGNAL(scaleChanged(double)), &mapper, SLOT(map()));
-        // connect(mapper, SIGNAL(mapped(int)), this, SLOT(yourSlot(int)));
         connect(m_vpImageView[i].get(), &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
         connect(m_vpImageView[i].get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
         connect(this, &MainWindow::scaleChanged, m_vpImageView[i].get(), &ImageView::zoomIn);
@@ -156,6 +153,32 @@ void MainWindow::create4Windows()
     m_vpSplitters.push_back(h1Splitter);
     m_vpSplitters.push_back(h2Splitter);
     m_vpSplitters.push_back(vSplitter);
+}
+
+void MainWindow::create2Windows()
+{
+    QSharedPointer<QSplitter> hSplitter = QSharedPointer<QSplitter>(new QSplitter(this));
+
+    hSplitter->addWidget(m_view.get());
+
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Top right view")));
+    QGraphicsScene *scene = new QGraphicsScene(this);
+    m_vpImageView.last()->view()->setScene(scene);
+    hSplitter->addWidget(m_vpImageView.last().get());
+
+    QHBoxLayout *layout = new QHBoxLayout;
+    layout->addWidget(hSplitter.get());
+    setLayout(layout);
+    setCentralWidget(hSplitter.get());
+
+    for (int i = 0; i < m_vpImageView.size(); ++i) {
+        connect(m_vpImageView[i].get(), &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
+        connect(m_vpImageView[i].get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
+        connect(this, &MainWindow::scaleChanged, m_vpImageView[i].get(), &ImageView::zoomIn);
+        connect(this, &MainWindow::angleChanged, m_vpImageView[i].get(), &ImageView::rotate);
+    }
+
+    m_vpSplitters.push_back(hSplitter);
 }
 
 void MainWindow::openImages4Windows()
@@ -183,6 +206,17 @@ void MainWindow::show4Windows()
 void MainWindow::hide4Windows()
 {
 
+}
+
+void MainWindow::removeAdditionalWindows() {
+    if (! m_view.isNull())
+        setCentralWidget(m_view.get());
+    if (m_vpImageItems.count())
+        m_vpImageItems.clear();
+    if (m_vpImageView.count())
+        m_vpImageView.clear();
+    if (m_vpSplitters.count())
+        m_vpSplitters.clear();
 }
 
 // ui->actionSimultaneousScroll->isChecked();

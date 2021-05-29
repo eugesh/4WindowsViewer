@@ -10,6 +10,7 @@ class ImageItem : public QGraphicsItem
 {
 public:
     ImageItem();
+    ~ImageItem() override;
 
     QRectF boundingRect() const override;
     //QPainterPath shape() const override;

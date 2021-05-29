@@ -10,6 +10,10 @@ ImageItem::ImageItem()
     setAcceptHoverEvents(true);
 }
 
+ImageItem::~ImageItem() {
+
+}
+
 QRectF
 ImageItem::boundingRect() const {
     return QRectF(QPointF(0, 0), m_image_part2draw.size());
