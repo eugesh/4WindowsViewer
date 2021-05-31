@@ -1,4 +1,5 @@
 #include <QRectF>
+#include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include "image-item.h"
 
@@ -53,6 +54,7 @@ void ImageItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         update();
         return;
     }
+    scene()->update();
     QGraphicsItem::mouseMoveEvent(event);
 }
 

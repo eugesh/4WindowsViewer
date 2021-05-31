@@ -281,7 +281,7 @@ void MainWindow::onAction4PointsRubberRect()
     QPointF center = QPointF(double(m_image.width()) / 2, double(m_image.height() / 2));
     QRectF rect = QRectF(m_image.rect());
     m_RR = QSharedPointer<RubberRect> (new RubberRect(rect, rect, center, 2, m_item.get()));
-    m_RR->cutting = true;
+    m_RR->setEditable(true);
 
     m_scene->addItem(m_RR.get());
     m_RR->show();
