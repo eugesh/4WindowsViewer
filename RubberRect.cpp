@@ -197,8 +197,21 @@ void RubberRect::paint(QPainter *painter,
     QPen pen(m_OutlineColor);
     pen.setWidth(2 * thickness);
     painter->setPen(pen);
-    QRectF rect(coord1, coord3); //= outlineRect();
-    painter->drawRect(rect);
+    // QRectF rect(coord1, coord3); //= outlineRect();
+    // painter->drawRect(rect);
+
+    QLineF line = QLineF(coord1, coord2);
+    painter->drawLine(line);
+
+    line = QLineF(coord2, coord3);
+    painter->drawLine(line);
+
+    line = QLineF(coord3, coord4);
+    painter->drawLine(line);
+
+    line = QLineF(coord1, coord4);
+    painter->drawLine(line);
+
     pen.setWidth(thickness);
     painter->setPen(pen);
     QRectF rect1(coord1, QPointF(coord1.x() + H_CORNER * thickness, coord1.y() + H_CORNER * thickness));
