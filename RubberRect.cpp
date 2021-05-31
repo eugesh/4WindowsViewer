@@ -19,7 +19,7 @@ RubberRect::RubberRect(QRectF RectF, QRectF maxRectF, QPointF Ctr, int th, QGrap
     coord2 = RectF.topRight();
     coord3 = RectF.bottomRight();
     coord4 = RectF.bottomLeft();
-    sizeF = QRectF(coord1, coord3).size();
+    // sizeF = QRectF(coord1, coord3).size();
     m_OutlineColor = Qt::darkGreen;
     setFlags(ItemIsMovable | ItemIsSelectable);
     // setFlag(ItemIgnoresTransformations,true);
@@ -28,8 +28,8 @@ RubberRect::RubberRect(QRectF RectF, QRectF maxRectF, QPointF Ctr, int th, QGrap
 
 void RubberRect::setCenter(QPointF C) {
    Center = C;
-   qreal sizeX = sizeF.width ();
-   qreal sizeY = sizeF.height();   
+   qreal sizeX = boundingRect().width(); // sizeF.width ();
+   qreal sizeY = boundingRect().height(); // sizeF.height();
    change_coord(QPointF(Center.x() - sizeX / 2, Center.y() - sizeY / 2), 1);
    change_coord(QPointF(Center.x() + sizeX / 2, Center.y() - sizeY / 2), 2);
    change_coord(QPointF(Center.x() + sizeX / 2, Center.y() + sizeY / 2), 3);
@@ -37,13 +37,13 @@ void RubberRect::setCenter(QPointF C) {
 }
 
 
-void RubberRect::SetSize(int size) {
+/*void RubberRect::SetSize(int size) {
    change_coord(QPointF(Center.x() - size / 2, Center.y() - size / 2), 1);
    change_coord(QPointF(Center.x() + size / 2, Center.y() - size / 2), 2);
    change_coord(QPointF(Center.x() + size / 2, Center.y() + size / 2), 3);
    change_coord(QPointF(Center.x() - size / 2, Center.y() + size / 2), 4);
-   sizeF = QSizeF(size, size);
-}
+   // sizeF = QSizeF(size, size);
+}*/
 
 
 void RubberRect::setP1(QPointF newp1){
@@ -52,7 +52,7 @@ void RubberRect::setP1(QPointF newp1){
         coord1 = newp1;
         coord4.setX(coord1.x());
         coord2.setY(coord1.y());
-        sizeF = QRectF(coord1, coord3).size();
+        // sizeF = QRectF(coord1, coord3).size();
         update();
     }
 }
@@ -63,7 +63,7 @@ void RubberRect::setP2(QPointF newp2){
          coord2 = newp2;
          coord3.setX(coord2.x());
          coord1.setY(coord2.y());
-         sizeF = QRectF(coord1, coord3).size();
+         // sizeF = QRectF(coord1, coord3).size();
          update();
      }
 }
@@ -74,7 +74,7 @@ void RubberRect::setP3(QPointF newp3){
          coord3 = newp3;
          coord2.setX(coord3.x());
          coord4.setY(coord3.y());
-         sizeF = QRectF(coord1, coord3).size();
+         // sizeF = QRectF(coord1, coord3).size();
          update();
      }
 }
@@ -85,7 +85,7 @@ void RubberRect::setP4(QPointF newp4) {
          coord4 = newp4;
          coord1.setX(coord4.x());
          coord3.setY(coord4.y());
-         sizeF = QRectF(coord1, coord3).size();
+         // sizeF = QRectF(coord1, coord3).size();
          update();
      }
 }

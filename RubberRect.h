@@ -18,7 +18,7 @@ public:
     bool isEditable() { return m_editing; }
 
     int  changed_corner(QPointF pos);
-    void SetSize(int size);
+    // void SetSize(int size);
     void setP1(QPointF newp1);
     void setP2(QPointF newp2);
     void setP3(QPointF newp3);
@@ -48,7 +48,7 @@ private:
     int thickness; // Толщина рамки.
     QPointF Center;
     QRectF max_imgRect;
-    QSizeF sizeF;
+    // QSizeF sizeF;
     QPointF coord1, coord2, coord3, coord4;
 };
 
