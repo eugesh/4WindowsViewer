@@ -12,6 +12,7 @@ class QGraphicsScene;
 class QSplitter;
 class QDockWidget;
 class ImageView;
+class RubberRect;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -58,6 +59,8 @@ private slots:
     void onActionRGB();
     void onActionHSV();
     void onActionHSI();
+    void onAction4PointsRubberRect();
+    void onActionProjectiveTransform();
     //void onSimultaneousScrollCheck(int check);
 
 private:
@@ -79,6 +82,8 @@ private:
     bool m_isSimultaneousScroll = true;
     ColorSpace m_colorSpace = RGB;
     QString m_lastPath = "/home";
+    // Projective trabsform tool
+    QSharedPointer<RubberRect> m_RR;
 };
 
 #endif // MAINWINDOW_H

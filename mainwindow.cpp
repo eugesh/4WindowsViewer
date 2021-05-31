@@ -1,5 +1,7 @@
+#include <QAction>
 #include <QDockWidget>
 #include <QFileDialog>
+#include <QGraphicsItem>
 #include <QSignalMapper>
 #include <QSplitter>
 
@@ -8,6 +10,7 @@
 #include "image-view.h"
 #include "image-item.h"
 #include "imageprocessor.h"
+#include "RubberRect.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -44,6 +47,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_view.get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
     connect(this, &MainWindow::scaleChanged, m_view.get(), &ImageView::zoomIn);
     connect(this, &MainWindow::angleChanged, m_view.get(), &ImageView::rotate);
+
+    connect(ui->action4PointsRubberRect, &QAction::triggered, this, &MainWindow::onAction4PointsRubberRect);
 }
 
 void MainWindow::on4WindowsCheck(int check)
@@ -269,4 +274,21 @@ void MainWindow::onAddHSplitter() {
 void MainWindow::onAddDockWidget() {
     QDockWidget *dock = new QDockWidget(tr(""), this);
     addDockWidget(Qt::RightDockWidgetArea, dock);
+}
+
+void MainWindow::onAction4PointsRubberRect()
+{
+    QPointF center = QPointF(double(m_image.width()) / 2, double(m_image.height() / 2));
+    QRectF rect = QRectF(m_image.rect());
+    m_RR = QSharedPointer<RubberRect> (new RubberRect(rect, rect, center, 2, m_item.get()));
+    m_RR->cutting = true;
+
+    m_scene->addItem(m_RR.get());
+    m_RR->show();
+    m_scene->update();
+}
+
+void MainWindow::onActionProjectiveTransform()
+{
+
 }

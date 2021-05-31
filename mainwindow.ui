@@ -36,6 +36,8 @@
     <property name="title">
      <string>Tools</string>
     </property>
+    <addaction name="action4PointsRubberRect"/>
+    <addaction name="actionProjectiveTransform"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -174,6 +176,16 @@
    </property>
    <property name="text">
     <string>2 Windows</string>
+   </property>
+  </action>
+  <action name="action4PointsRubberRect">
+   <property name="text">
+    <string>4 Points Rubber Rect</string>
+   </property>
+  </action>
+  <action name="actionProjectiveTransform">
+   <property name="text">
+    <string>Projective Transform</string>
    </property>
   </action>
  </widget>
