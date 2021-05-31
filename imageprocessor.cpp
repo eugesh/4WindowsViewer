@@ -4,6 +4,7 @@
 {
 
 }*/
+namespace geom {
 
 inline unsigned char fitIn255(int val) {
     if (val > 255) val = 255;
@@ -105,4 +106,6 @@ QImage getChannel(const QImage & InImg, ColorName chName)
     }
 
     return curImg;
+}
+
 }

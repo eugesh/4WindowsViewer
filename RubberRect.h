@@ -1,6 +1,8 @@
 #ifndef RUBBER_RECT_H
 #define RUBBER_RECT_H
 
+#include "imageprocessor.h"
+
 #include <QApplication>
 #include <QColor>
 #include <QGraphicsItem>
@@ -8,6 +10,13 @@
 #include <iostream>
 #define H_CORNER 10
 
+enum CornerType {
+    TopLeft = 0,
+    TopRight,
+    BottomRight,
+    BottomLeft,
+    WholeRect
+};
 
 class RubberRect : public QGraphicsItem
 {
@@ -17,13 +26,13 @@ public:
     void setEditable(bool isEdit) { m_editing = isEdit; }
     bool isEditable() { return m_editing; }
 
-    int  changed_corner(QPointF pos);
+    CornerType  changed_corner(QPointF pos);
     // void SetSize(int size);
     void setP1(QPointF newp1);
     void setP2(QPointF newp2);
     void setP3(QPointF newp3);
     void setP4(QPointF newp4);
-    bool change_coord(QPointF point, int corner);
+    bool change_coord(QPointF point, CornerType corner);
     virtual QRectF boundingRect() const override;
     void paint(QPainter *painter,
                const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -44,12 +53,13 @@ private:
     bool bchanges;
     bool m_editing;
     bool bmove;
-    int corner;
+    CornerType m_corner;
     int thickness; // Толщина рамки.
     QPointF Center;
     QRectF max_imgRect;
     // QSizeF sizeF;
     QPointF coord1, coord2, coord3, coord4;
+    std::vector<geom::PixelPoint> m_vRRPoints;
 };
 
 #endif

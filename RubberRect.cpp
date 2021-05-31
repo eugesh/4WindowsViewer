@@ -14,11 +14,15 @@ RubberRect::RubberRect(QRectF RectF, QRectF maxRectF, QPointF Ctr, int th, QGrap
     bchanges = false;
     m_editing = false;
     bmove = false;
-    corner = 0;
+    m_corner = WholeRect;
     coord1 = RectF.topLeft();
     coord2 = RectF.topRight();
     coord3 = RectF.bottomRight();
     coord4 = RectF.bottomLeft();
+    // m_vRRPoints << coord1 << coord1 << coord1 << coord4;
+    m_vRRPoints = { coord1, coord1, coord1, coord4};
+    // m_vRRPoints = { geom::PixelPoint(coord1), geom::PixelPoint(coord1), geom::PixelPoint(coord1), geom::PixelPoint(coord4) };
+    // m_vRRPoints << geom::PixelPoint(coord1) << geom::PixelPoint(coord1) << geom::PixelPoint(coord1) << geom::PixelPoint(coord4);
     // sizeF = QRectF(coord1, coord3).size();
     m_OutlineColor = Qt::darkGreen;
     setFlags(ItemIsMovable | ItemIsSelectable);
@@ -27,13 +31,13 @@ RubberRect::RubberRect(QRectF RectF, QRectF maxRectF, QPointF Ctr, int th, QGrap
 
 
 void RubberRect::setCenter(QPointF C) {
-   Center = C;
-   qreal sizeX = boundingRect().width(); // sizeF.width ();
-   qreal sizeY = boundingRect().height(); // sizeF.height();
-   change_coord(QPointF(Center.x() - sizeX / 2, Center.y() - sizeY / 2), 1);
-   change_coord(QPointF(Center.x() + sizeX / 2, Center.y() - sizeY / 2), 2);
-   change_coord(QPointF(Center.x() + sizeX / 2, Center.y() + sizeY / 2), 3);
-   change_coord(QPointF(Center.x() - sizeX / 2, Center.y() + sizeY / 2), 4);
+    Center = C;
+    qreal sizeX = boundingRect().width(); // sizeF.width ();
+    qreal sizeY = boundingRect().height(); // sizeF.height();
+    change_coord(QPointF(Center.x() - sizeX / 2, Center.y() - sizeY / 2), TopLeft);
+    change_coord(QPointF(Center.x() + sizeX / 2, Center.y() - sizeY / 2), TopRight);
+    change_coord(QPointF(Center.x() + sizeX / 2, Center.y() + sizeY / 2), BottomRight);
+    change_coord(QPointF(Center.x() - sizeX / 2, Center.y() + sizeY / 2), BottomLeft);
 }
 
 
@@ -113,8 +117,8 @@ void RubberRect::setP4(QPointF newp4) {
     return corner;
 }*/
 
-int RubberRect::changed_corner( QPointF pos ) {
-    corner = 0;
+CornerType RubberRect::changed_corner( QPointF pos ) {
+    m_corner = WholeRect;
     QRectF rect1(QPointF(coord1.x() - H_CORNER * thickness, coord1.y() - H_CORNER * thickness),
                  QPointF(coord1.x() + H_CORNER * thickness, coord1.y() + H_CORNER * thickness));
     QRectF rect2(QPointF(coord2.x() - H_CORNER * thickness, coord2.y() - H_CORNER * thickness),
@@ -125,52 +129,56 @@ int RubberRect::changed_corner( QPointF pos ) {
                  QPointF(coord4.x() + H_CORNER * thickness, coord4.y() + H_CORNER * thickness));
 
     if (boundingRect().contains(pos))
-        corner = 5;
+        m_corner = WholeRect;
     if (rect1.contains(pos))
-        corner = 1;   //topleft
+        m_corner = TopLeft;   //topleft
     if (rect2.contains(pos))
-        corner = 2;   //topright
+        m_corner = TopRight;   //topright
     if (rect3.contains(pos))
-        corner = 3;   //bottomright
+        m_corner = BottomRight;   //bottomright
     if (rect4.contains(pos))
-        corner = 4;   //bottomleft
+        m_corner = BottomLeft;   //bottomleft
 
-    return corner;
+    return m_corner;
 }
 
-bool RubberRect::change_coord(QPointF point, int corner) {
+bool RubberRect::change_coord(QPointF point, CornerType corner) {
     bool is_changed = 0;
 
     switch(corner) {
-    case 1:
+    case TopLeft:
         if (max_imgRect.topLeft().x() > point.x()) //отслеживается выход
             point.setX(max_imgRect.topLeft().x()); //за границу растра
         if (max_imgRect.topLeft().y() > point.y())
             point.setY(max_imgRect.topLeft().y());
         setP1(point);
     break;
-    case 2:
+    case TopRight:
         if (max_imgRect.topRight().x() < point.x())
             point.setX(max_imgRect.topRight().x());
         if (max_imgRect.topRight().y() > point.y())
             point.setY(max_imgRect.topRight().y());
         setP2(point);
     break;
-    case 3:
+    case BottomRight:
         if (max_imgRect.bottomRight().x() < point.x())
             point.setX(max_imgRect.bottomRight().x());
         if (max_imgRect.bottomRight().y() < point.y())
             point.setY(max_imgRect.bottomRight().y());
         setP3(point);
     break;
-    case 4:
+    case BottomLeft:
         if (max_imgRect.bottomLeft().x() > point.x())
             point.setX(max_imgRect.bottomLeft().x());
         if (max_imgRect.bottomLeft().y() < point.y())
             point.setY(max_imgRect.bottomLeft().y());
         setP4(point);
     break;
+    case WholeRect:
+        break;
     }
+
+    m_vRRPoints[corner] = {point};
 
     return is_changed;
 }
@@ -190,12 +198,12 @@ QRectF RubberRect::boundingRect() const
 void RubberRect::mousePressEvent (QGraphicsSceneMouseEvent * event)
 {   
     if (m_editing) {
-        corner = changed_corner(event->pos());
-        if (corner < 5 && corner > 0){
-            change_coord(event->pos(), corner);
+        m_corner = changed_corner(event->pos());
+        if (m_corner < WholeRect && m_corner >= TopLeft){
+            change_coord(event->pos(), m_corner);
             bchanges = true;
         }
-        if (corner == 5) {
+        if (m_corner == WholeRect) {
             bmove = true;
         }
     }
@@ -205,7 +213,7 @@ void RubberRect::mousePressEvent (QGraphicsSceneMouseEvent * event)
 void RubberRect::mouseMoveEvent (QGraphicsSceneMouseEvent * event)
 {
     if (bchanges) {
-        change_coord(event->pos(), corner);
+        change_coord(event->pos(), m_corner);
     }
 
     if (bmove) {

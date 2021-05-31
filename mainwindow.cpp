@@ -199,7 +199,7 @@ void MainWindow::openImages4Windows()
             m_vpImageView[i]->view()->setScene(scene);
             scene->update();
         }
-        m_vpImageItems[i]->setFiltered(getChannel(m_item->getImage(), m_colorSpace, i));
+        m_vpImageItems[i]->setFiltered(geom::getChannel(m_item->getImage(), m_colorSpace, i));
     }
 }
 
