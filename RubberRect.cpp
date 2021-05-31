@@ -50,8 +50,8 @@ void RubberRect::setP1(QPointF newp1){
     if (newp1 != coord1) {
         prepareGeometryChange();
         coord1 = newp1;
-        coord4.setX(coord1.x());
-        coord2.setY(coord1.y());
+        // coord4.setX(coord1.x());
+        // coord2.setY(coord1.y());
         // sizeF = QRectF(coord1, coord3).size();
         update();
     }
@@ -61,8 +61,8 @@ void RubberRect::setP2(QPointF newp2){
      if (newp2 != coord2) {
          prepareGeometryChange();
          coord2 = newp2;
-         coord3.setX(coord2.x());
-         coord1.setY(coord2.y());
+         // coord3.setX(coord2.x());
+         // coord1.setY(coord2.y());
          // sizeF = QRectF(coord1, coord3).size();
          update();
      }
@@ -72,8 +72,8 @@ void RubberRect::setP3(QPointF newp3){
      if (newp3 != coord3) {
          prepareGeometryChange();
          coord3 = newp3;
-         coord2.setX(coord3.x());
-         coord4.setY(coord3.y());
+         // coord2.setX(coord3.x());
+         // coord4.setY(coord3.y());
          // sizeF = QRectF(coord1, coord3).size();
          update();
      }
@@ -83,8 +83,8 @@ void RubberRect::setP4(QPointF newp4) {
      if (newp4 != coord4) {
          prepareGeometryChange();
          coord4 = newp4;
-         coord1.setX(coord4.x());
-         coord3.setY(coord4.y());
+         // coord1.setX(coord4.x());
+         // coord3.setY(coord4.y());
          // sizeF = QRectF(coord1, coord3).size();
          update();
      }
@@ -152,7 +152,14 @@ bool RubberRect::change_coord(QPointF point, int corner) {
 
 QRectF RubberRect::boundingRect() const
 {
-    return QRectF(coord1, coord3);
+    double right, left, top, bottom;
+
+    right = std::max(coord2.x(), coord3.x());
+    left = std::min(coord1.x(), coord4.x());
+    top = std::min(coord1.y(), coord2.y());
+    bottom = std::max(coord3.y(), coord4.y());
+
+    return QRectF(QPointF(left, top), QPointF(right, bottom));
 }
 
 void RubberRect::mousePressEvent (QGraphicsSceneMouseEvent * event)
