@@ -90,7 +90,7 @@ void RubberRect::setP4(QPointF newp4) {
      }
 }
 
-int RubberRect::changed_corner( QPointF pos ) {
+/*int RubberRect::changed_corner( QPointF pos ) {
     corner = 0;
     QRectF rect1(coord1, QPointF(coord1.x() + H_CORNER * thickness, coord1.y() + H_CORNER * thickness));
     QRectF rect2(QPointF(coord2.x() - H_CORNER * thickness, coord2.y()),
@@ -98,6 +98,31 @@ int RubberRect::changed_corner( QPointF pos ) {
     QRectF rect3(QPointF(coord3.x() - H_CORNER * thickness, coord3.y() - H_CORNER * thickness), coord3);
     QRectF rect4(QPointF(coord4.x(), coord4.y() - H_CORNER * thickness),
                  QPointF(coord4.x() + H_CORNER * thickness, coord4.y()));
+
+    if (boundingRect().contains(pos))
+        corner = 5;
+    if (rect1.contains(pos))
+        corner = 1;   //topleft
+    if (rect2.contains(pos))
+        corner = 2;   //topright
+    if (rect3.contains(pos))
+        corner = 3;   //bottomright
+    if (rect4.contains(pos))
+        corner = 4;   //bottomleft
+
+    return corner;
+}*/
+
+int RubberRect::changed_corner( QPointF pos ) {
+    corner = 0;
+    QRectF rect1(QPointF(coord1.x() - H_CORNER * thickness, coord1.y() - H_CORNER * thickness),
+                 QPointF(coord1.x() + H_CORNER * thickness, coord1.y() + H_CORNER * thickness));
+    QRectF rect2(QPointF(coord2.x() - H_CORNER * thickness, coord2.y() - H_CORNER * thickness),
+                 QPointF(coord2.x() + H_CORNER * thickness, coord2.y() + H_CORNER * thickness));
+    QRectF rect3(QPointF(coord3.x() - H_CORNER * thickness, coord3.y() - H_CORNER * thickness),
+                 QPointF(coord3.x() + H_CORNER * thickness, coord3.y() + H_CORNER * thickness));
+    QRectF rect4(QPointF(coord4.x() - H_CORNER * thickness, coord4.y() - H_CORNER * thickness),
+                 QPointF(coord4.x() + H_CORNER * thickness, coord4.y() + H_CORNER * thickness));
 
     if (boundingRect().contains(pos))
         corner = 5;
@@ -154,10 +179,10 @@ QRectF RubberRect::boundingRect() const
 {
     double right, left, top, bottom;
 
-    right = std::max(coord2.x(), coord3.x());
-    left = std::min(coord1.x(), coord4.x());
-    top = std::min(coord1.y(), coord2.y());
-    bottom = std::max(coord3.y(), coord4.y());
+    right = std::max(coord2.x(), coord3.x())  + H_CORNER * thickness;
+    left = std::min(coord1.x(), coord4.x()) - H_CORNER * thickness;
+    top = std::min(coord1.y(), coord2.y()) - H_CORNER * thickness;
+    bottom = std::max(coord3.y(), coord4.y()) + H_CORNER * thickness;
 
     return QRectF(QPointF(left, top), QPointF(right, bottom));
 }
@@ -221,19 +246,23 @@ void RubberRect::paint(QPainter *painter,
 
     pen.setWidth(thickness);
     painter->setPen(pen);
-    QRectF rect1(coord1, QPointF(coord1.x() + H_CORNER * thickness, coord1.y() + H_CORNER * thickness));
-    painter->drawRect(rect1);
+    // QRectF rect1(coord1, QPointF(coord1.x() + H_CORNER * thickness, coord1.y() + H_CORNER * thickness));
+    // painter->drawRect(rect1);
+    painter->drawEllipse(coord1, H_CORNER * thickness, H_CORNER * thickness);
 
-    QRectF rect2(QPointF(coord2.x() - H_CORNER * thickness, coord2.y()),
-                 QPointF(coord2.x(), coord2.y() + H_CORNER * thickness));
-    painter->drawRect(rect2);
+    // QRectF rect2(QPointF(coord2.x() - H_CORNER * thickness, coord2.y()),
+    //              QPointF(coord2.x(), coord2.y() + H_CORNER * thickness));
+    // painter->drawRect(rect2);
+    painter->drawEllipse(coord2, H_CORNER * thickness, H_CORNER * thickness);
 
-    QRectF rect3(QPointF(coord3.x() - H_CORNER * thickness, coord3.y() - H_CORNER * thickness), coord3);
-    painter->drawRect(rect3);
+    // QRectF rect3(QPointF(coord3.x() - H_CORNER * thickness, coord3.y() - H_CORNER * thickness), coord3);
+    // painter->drawRect(rect3);
+    painter->drawEllipse(coord3, H_CORNER * thickness, H_CORNER * thickness);
 
-    QRectF rect4(QPointF(coord4.x(), coord4.y() - H_CORNER * thickness),
-                 QPointF(coord4.x() + H_CORNER * thickness, coord4.y()));
-    painter->drawRect(rect4);
+    // QRectF rect4(QPointF(coord4.x(), coord4.y() - H_CORNER * thickness),
+    //              QPointF(coord4.x() + H_CORNER * thickness, coord4.y()));
+    // painter->drawRect(rect4);
+    painter->drawEllipse(coord4, H_CORNER * thickness, H_CORNER * thickness);
 }
 
 /*
