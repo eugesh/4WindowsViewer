@@ -1,6 +1,8 @@
 #ifndef IMAGEPROCESSINGCOMMON_H
 #define IMAGEPROCESSINGCOMMON_H
 
+namespace geom {
+
 enum ColorSpace {
     RGB,
     HSV,
@@ -19,5 +21,7 @@ enum ColorName {
     lightness,
     intensity
 };
+
+}
 
 #endif // IMAGEPROCESSINGCOMMON_H

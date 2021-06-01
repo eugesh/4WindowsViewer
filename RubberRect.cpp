@@ -15,14 +15,12 @@ RubberRect::RubberRect(QRectF RectF, QRectF maxRectF, QPointF Ctr, int th, QGrap
     m_editing = false;
     bmove = false;
     m_corner = WholeRect;
-    coord1 = RectF.topLeft();
+    /*coord1 = RectF.topLeft();
     coord2 = RectF.topRight();
     coord3 = RectF.bottomRight();
-    coord4 = RectF.bottomLeft();
-    // m_vRRPoints << coord1 << coord1 << coord1 << coord4;
-    m_vRRPoints = { coord1, coord1, coord1, coord4};
-    // m_vRRPoints = { geom::PixelPoint(coord1), geom::PixelPoint(coord1), geom::PixelPoint(coord1), geom::PixelPoint(coord4) };
-    // m_vRRPoints << geom::PixelPoint(coord1) << geom::PixelPoint(coord1) << geom::PixelPoint(coord1) << geom::PixelPoint(coord4);
+    coord4 = RectF.bottomLeft();*/
+    m_vCorners = {RectF.topLeft(), RectF.topRight(), RectF.bottomRight(), RectF.bottomLeft()};
+    //m_vRRPoints = {coord1, coord2, coord3, coord4};
     // sizeF = QRectF(coord1, coord3).size();
     m_OutlineColor = Qt::darkGreen;
     setFlags(ItemIsMovable | ItemIsSelectable);
@@ -51,9 +49,9 @@ void RubberRect::setCenter(QPointF C) {
 
 
 void RubberRect::setP1(QPointF newp1){
-    if (newp1 != coord1) {
+    if (newp1 != m_vCorners[TopLeft]) {
         prepareGeometryChange();
-        coord1 = newp1;
+        m_vCorners[TopLeft] = newp1;
         // coord4.setX(coord1.x());
         // coord2.setY(coord1.y());
         // sizeF = QRectF(coord1, coord3).size();
@@ -62,9 +60,9 @@ void RubberRect::setP1(QPointF newp1){
 }
 
 void RubberRect::setP2(QPointF newp2){
-     if (newp2 != coord2) {
+     if (newp2 != m_vCorners[TopRight]) {
          prepareGeometryChange();
-         coord2 = newp2;
+         m_vCorners[TopRight] = newp2;
          // coord3.setX(coord2.x());
          // coord1.setY(coord2.y());
          // sizeF = QRectF(coord1, coord3).size();
@@ -73,9 +71,9 @@ void RubberRect::setP2(QPointF newp2){
 }
 
 void RubberRect::setP3(QPointF newp3){
-     if (newp3 != coord3) {
+     if (newp3 != m_vCorners[BottomRight]) {
          prepareGeometryChange();
-         coord3 = newp3;
+         m_vCorners[BottomRight] = newp3;
          // coord2.setX(coord3.x());
          // coord4.setY(coord3.y());
          // sizeF = QRectF(coord1, coord3).size();
@@ -84,9 +82,9 @@ void RubberRect::setP3(QPointF newp3){
 }
 
 void RubberRect::setP4(QPointF newp4) {
-     if (newp4 != coord4) {
+     if (newp4 != m_vCorners[BottomLeft]) {
          prepareGeometryChange();
-         coord4 = newp4;
+         m_vCorners[BottomLeft] = newp4;
          // coord1.setX(coord4.x());
          // coord3.setY(coord4.y());
          // sizeF = QRectF(coord1, coord3).size();
@@ -117,7 +115,7 @@ void RubberRect::setP4(QPointF newp4) {
     return corner;
 }*/
 
-CornerType RubberRect::changed_corner( QPointF pos ) {
+/*CornerType RubberRect::changed_corner( QPointF pos ) {
     m_corner = WholeRect;
     QRectF rect1(QPointF(coord1.x() - H_CORNER * thickness, coord1.y() - H_CORNER * thickness),
                  QPointF(coord1.x() + H_CORNER * thickness, coord1.y() + H_CORNER * thickness));
@@ -138,6 +136,21 @@ CornerType RubberRect::changed_corner( QPointF pos ) {
         m_corner = BottomRight;   //bottomright
     if (rect4.contains(pos))
         m_corner = BottomLeft;   //bottomleft
+
+    return m_corner;
+}*/
+
+CornerType RubberRect::changed_corner( QPointF pos ) {
+    if (boundingRect().contains(pos))
+        m_corner = WholeRect;
+
+    for (int i = 0; i < 4; ++i) {
+        CornerType t = CornerType(i);
+        QRectF rect(QPointF(m_vCorners[t].x() - H_CORNER * thickness, m_vCorners[t].y() - H_CORNER * thickness),
+                    QPointF(m_vCorners[t].x() + H_CORNER * thickness, m_vCorners[t].y() + H_CORNER * thickness));
+        if (rect.contains(pos))
+            m_corner = t;
+    }
 
     return m_corner;
 }
@@ -178,7 +191,7 @@ bool RubberRect::change_coord(QPointF point, CornerType corner) {
         break;
     }
 
-    m_vRRPoints[corner] = {point};
+    //m_vRRPoints[corner] = {point};
 
     return is_changed;
 }
@@ -187,10 +200,15 @@ QRectF RubberRect::boundingRect() const
 {
     double right, left, top, bottom;
 
-    right = std::max(coord2.x(), coord3.x())  + H_CORNER * thickness;
+    right = std::max(m_vCorners[TopRight].x(), m_vCorners[BottomRight].x())  + H_CORNER * thickness;
+    left = std::min(m_vCorners[TopLeft].x(), m_vCorners[BottomLeft].x()) - H_CORNER * thickness;
+    top = std::min(m_vCorners[TopLeft].y(), m_vCorners[TopRight].y()) - H_CORNER * thickness;
+    bottom = std::max(m_vCorners[BottomLeft].y(), m_vCorners[BottomRight].y()) + H_CORNER * thickness;
+
+    /*right = std::max(coord2.x(), coord3.x())  + H_CORNER * thickness;
     left = std::min(coord1.x(), coord4.x()) - H_CORNER * thickness;
     top = std::min(coord1.y(), coord2.y()) - H_CORNER * thickness;
-    bottom = std::max(coord3.y(), coord4.y()) + H_CORNER * thickness;
+    bottom = std::max(coord3.y(), coord4.y()) + H_CORNER * thickness;*/
 
     return QRectF(QPointF(left, top), QPointF(right, bottom));
 }
@@ -240,37 +258,44 @@ void RubberRect::paint(QPainter *painter,
     // QRectF rect(coord1, coord3); //= outlineRect();
     // painter->drawRect(rect);
 
-    QLineF line = QLineF(coord1, coord2);
+    QLineF line = QLineF(m_vCorners[TopRight], m_vCorners[BottomRight]);
     painter->drawLine(line);
 
-    line = QLineF(coord2, coord3);
+    line = QLineF(m_vCorners[TopLeft], m_vCorners[BottomLeft]);
     painter->drawLine(line);
 
-    line = QLineF(coord3, coord4);
+    line = QLineF(m_vCorners[TopLeft], m_vCorners[TopRight]);
     painter->drawLine(line);
 
-    line = QLineF(coord1, coord4);
+    line = QLineF(m_vCorners[BottomLeft], m_vCorners[BottomRight]);
     painter->drawLine(line);
 
     pen.setWidth(thickness);
     painter->setPen(pen);
+
+    for (int i = 0; i < 4; ++i) {
+        CornerType t = CornerType(i);
+        painter->drawEllipse(m_vCorners[t], H_CORNER * thickness, H_CORNER * thickness);
+    }
+
     // QRectF rect1(coord1, QPointF(coord1.x() + H_CORNER * thickness, coord1.y() + H_CORNER * thickness));
     // painter->drawRect(rect1);
-    painter->drawEllipse(coord1, H_CORNER * thickness, H_CORNER * thickness);
+
+    //painter->drawEllipse(coord1, H_CORNER * thickness, H_CORNER * thickness);
 
     // QRectF rect2(QPointF(coord2.x() - H_CORNER * thickness, coord2.y()),
     //              QPointF(coord2.x(), coord2.y() + H_CORNER * thickness));
     // painter->drawRect(rect2);
-    painter->drawEllipse(coord2, H_CORNER * thickness, H_CORNER * thickness);
+    //painter->drawEllipse(coord2, H_CORNER * thickness, H_CORNER * thickness);
 
     // QRectF rect3(QPointF(coord3.x() - H_CORNER * thickness, coord3.y() - H_CORNER * thickness), coord3);
     // painter->drawRect(rect3);
-    painter->drawEllipse(coord3, H_CORNER * thickness, H_CORNER * thickness);
+    //painter->drawEllipse(coord3, H_CORNER * thickness, H_CORNER * thickness);
 
     // QRectF rect4(QPointF(coord4.x(), coord4.y() - H_CORNER * thickness),
     //              QPointF(coord4.x() + H_CORNER * thickness, coord4.y()));
     // painter->drawRect(rect4);
-    painter->drawEllipse(coord4, H_CORNER * thickness, H_CORNER * thickness);
+    //painter->drawEllipse(coord4, H_CORNER * thickness, H_CORNER * thickness);
 }
 
 /*

@@ -58,8 +58,9 @@ private:
     QPointF Center;
     QRectF max_imgRect;
     // QSizeF sizeF;
-    QPointF coord1, coord2, coord3, coord4;
-    std::vector<geom::PixelPoint> m_vRRPoints;
+    // QPointF coord1, coord2, coord3, coord4;
+    std::vector<QPointF> m_vCorners;
+    // std::vector<geom::PixelPoint> m_vRRPoints;
 };
 
 #endif

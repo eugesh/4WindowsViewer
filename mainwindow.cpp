@@ -10,6 +10,7 @@
 #include "image-view.h"
 #include "image-item.h"
 #include "imageprocessor.h"
+#include "opencv_processor.h"
 #include "RubberRect.h"
 
 MainWindow::MainWindow(QWidget *parent) :

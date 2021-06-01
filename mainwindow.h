@@ -15,6 +15,8 @@ class ImageView;
 class RubberRect;
 QT_END_NAMESPACE
 
+using namespace geom;
+
 namespace Ui {
 class MainWindow;
 }

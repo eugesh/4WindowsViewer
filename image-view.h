@@ -6,6 +6,8 @@
 #include <QWheelEvent>
 #include "image-processing-common.h"
 
+using namespace geom;
+
 QT_BEGIN_NAMESPACE
 class QLabel;
 class QSlider;
