@@ -37,6 +37,7 @@ public:
     void paint(QPainter *painter,
                const QStyleOptionGraphicsItem *option, QWidget *widget) override;
     void setCenter(QPointF C);
+    std::vector<QPointF> getPoints() const { return m_vCorners; }
 
 protected:
     //! Oтработка нажатия на кнопки мыши.

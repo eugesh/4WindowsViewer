@@ -13,6 +13,7 @@
 #include "opencv_processor.h"
 #include "RubberRect.h"
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -50,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, &MainWindow::angleChanged, m_view.get(), &ImageView::rotate);
 
     connect(ui->action4PointsRubberRect, &QAction::triggered, this, &MainWindow::onAction4PointsRubberRect);
+    connect(ui->actionProjectiveTransform, &QAction::triggered, this, &MainWindow::onActionProjectiveTransform);
 }
 
 void MainWindow::on4WindowsCheck(int check)
@@ -289,7 +291,47 @@ void MainWindow::onAction4PointsRubberRect()
     m_scene->update();
 }
 
+void MainWindow::onAction4PointsWithLines() {
+
+}
+
 void MainWindow::onActionProjectiveTransform()
 {
+    if (m_vpSplitters.count() && !m_RR.isNull()) {
+        std::vector<QPointF> outPoints;
 
+        outPoints.push_back(m_RR->getPoints()[0]);
+
+        QPointF Point2 = m_RR->getPoints()[1] - m_RR->getPoints()[0];
+        // Point2.setX(Point2.manhattanLength() + m_RR->getPoints()[0].rx());
+        Point2.setX(std::hypot(Point2.x(), Point2.y()) + m_RR->getPoints()[0].rx());
+        Point2.setY(m_RR->getPoints()[0].ry());
+
+        outPoints.push_back(Point2);
+
+        QPointF Point4 = m_RR->getPoints()[3] - m_RR->getPoints()[0];
+        // Point4.setY(Point4.manhattanLength() + m_RR->getPoints()[0].ry());
+        Point4.setY(std::hypot(Point4.x(), Point4.y()) + m_RR->getPoints()[0].ry());
+        Point4.setX(m_RR->getPoints()[0].rx());
+
+        QPointF Point3 = m_RR->getPoints()[2] - m_RR->getPoints()[1];
+        Point3.setX(Point2.rx());
+        Point3.setY(Point4.ry());
+
+        outPoints.push_back(Point3);
+
+        // outPoints.push_back(m_RR->getPoints()[1]);
+        // outPoints.push_back(m_RR->getPoints()[2]);
+
+        outPoints.push_back(Point4);
+
+        // int width = m_RR->getPoints()[1].rx() - m_RR->getPoints()[0].rx();
+        // width
+        double alpha = atan2(m_RR->getPoints()[2].ry() - m_RR->getPoints()[1].ry(), m_RR->getPoints()[1].rx() - m_RR->getPoints()[0].rx());
+
+
+        QSize outSize(int(double(m_image.width()) / sin(alpha)), m_image.height());
+        m_vpImageItems.first()->setImage(calc_projection_4points(m_RR->getPoints(), outPoints, m_image, outSize));
+        m_vpImageView.first()->view()->scene()->update();
+    }
 }

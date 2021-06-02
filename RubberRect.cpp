@@ -241,7 +241,7 @@ void RubberRect::mouseMoveEvent (QGraphicsSceneMouseEvent * event)
     parentItem()->scene()->update();
 }
 
-void RubberRect::mouseReleaseEvent (QGraphicsSceneMouseEvent * event) {
+void RubberRect::mouseReleaseEvent(QGraphicsSceneMouseEvent * event) {
     bchanges = false;
     bmove = false;
     // parentItem()->scene()->update();
