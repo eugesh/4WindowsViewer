@@ -26,6 +26,12 @@ void PixelRuler::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWid
 
     painter->drawEllipse(line().p1(), H_CORNER * thickness, H_CORNER * thickness);
     painter->drawEllipse(line().p2(), H_CORNER * thickness, H_CORNER * thickness);
+
+    QPoint textPoint;
+    textPoint.setX(int(line().p2().x()));
+    textPoint.setY(int(line().p2().y() - 25));
+    QString distanceText = QString("%1").arg(line().length());
+    painter->drawText(textPoint, distanceText);
 }
 
 QRectF PixelRuler::boundingRect() const
