@@ -12,6 +12,7 @@ class QGraphicsScene;
 class QSplitter;
 class QDockWidget;
 class ImageView;
+class PixelRuler;
 class RubberRect;
 QT_END_NAMESPACE
 
@@ -62,7 +63,9 @@ private slots:
     void onActionHSV();
     void onActionHSI();
     void onAction4PointsRubberRect();
+    void onAction4PointsWithLines();
     void onActionProjectiveTransform();
+    void onActionPixelRuler();
     //void onSimultaneousScrollCheck(int check);
 
 private:
@@ -86,6 +89,7 @@ private:
     QString m_lastPath = "/home";
     // Projective trabsform tool
     QSharedPointer<RubberRect> m_RR;
+    QSharedPointer<PixelRuler> m_PixelRuler;
 };
 
 #endif // MAINWINDOW_H

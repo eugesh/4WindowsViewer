@@ -35,6 +35,7 @@ add_executable(raster_view
     image-item.cpp
     imageprocessor.cpp
     image-view.cpp
+    pixelruler.cpp
     RubberRect.cpp ${QRCS})
 
 # Resources:

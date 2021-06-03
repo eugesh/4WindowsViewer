@@ -38,6 +38,8 @@
     </property>
     <addaction name="action4PointsRubberRect"/>
     <addaction name="actionProjectiveTransform"/>
+    <addaction name="action4PointsWithLines"/>
+    <addaction name="actionPixelRuler"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -186,6 +188,16 @@
   <action name="actionProjectiveTransform">
    <property name="text">
     <string>Projective Transform</string>
+   </property>
+  </action>
+  <action name="action4PointsWithLines">
+   <property name="text">
+    <string>4 Points with Aux Lines</string>
+   </property>
+  </action>
+  <action name="actionPixelRuler">
+   <property name="text">
+    <string>Pixel Ruler</string>
    </property>
   </action>
  </widget>

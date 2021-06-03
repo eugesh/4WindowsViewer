@@ -12,6 +12,7 @@
 #include "imageprocessor.h"
 #include "opencv_processor.h"
 #include "RubberRect.h"
+#include "pixelruler.h"
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -52,6 +53,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->action4PointsRubberRect, &QAction::triggered, this, &MainWindow::onAction4PointsRubberRect);
     connect(ui->actionProjectiveTransform, &QAction::triggered, this, &MainWindow::onActionProjectiveTransform);
+    connect(ui->actionPixelRuler, &QAction::triggered, this, &MainWindow::onActionPixelRuler);
+}
+
+MainWindow::~MainWindow()
+{
+    removeAdditionalWindows();
+    delete ui;
 }
 
 void MainWindow::on4WindowsCheck(int check)
@@ -232,11 +240,6 @@ void MainWindow::removeAdditionalWindows() {
     m_isSimultaneousScroll = check;
 }*/
 
-MainWindow::~MainWindow()
-{
-    delete ui;
-}
-
 int
 MainWindow::openImage() {
     QString fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), m_lastPath, tr("Images (*.png *.bmp *.tif *.xpm *.jpg *.jpeg *.JPG)"));
@@ -293,6 +296,19 @@ void MainWindow::onAction4PointsRubberRect()
 
 void MainWindow::onAction4PointsWithLines() {
 
+}
+
+void MainWindow::onActionPixelRuler()
+{
+    if (m_vpSplitters.count() && m_vpImageItems.count()) {
+        m_PixelRuler = QSharedPointer<PixelRuler> (new PixelRuler(QLineF(10, 10, 100, 100),
+                       m_vpImageItems.first().get()->getImage().rect(), m_vpImageItems.first().get()));
+        m_PixelRuler->setEditable(true);
+
+        m_vpImageView.first()->view()->scene()->addItem(m_PixelRuler.get());
+        m_PixelRuler->show();
+        m_vpImageView.first()->view()->scene()->update();
+    }
 }
 
 void MainWindow::onActionProjectiveTransform()
