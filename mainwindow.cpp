@@ -1,4 +1,5 @@
 #include <QAction>
+#include <QDebug>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QGraphicsItem>
@@ -34,6 +35,9 @@ MainWindow::MainWindow(QWidget *parent) :
     setCentralWidget(m_view.get());
 
     connect(ui->actionOpen_image, &QAction::triggered, this, &MainWindow::openImage);
+    connect(ui->actionSavePerspectiveProjectionMatrix, &QAction::triggered,
+            this, &MainWindow::onActionSavePerspectiveProjectionMatrix);
+
     //  ToDo: create shortcuts
     connect(ui->actionHorizontal, &QAction::triggered, this, &MainWindow::onAddHSplitter);
     connect(ui->actionVertical, &QAction::triggered, this, &MainWindow::onAddVSplitter);
@@ -325,6 +329,25 @@ void MainWindow::onActionPixelRuler()
     }
 }
 
+void MainWindow::onActionSavePerspectiveProjectionMatrix()
+{
+    m_saveMatrixPath = QFileDialog::getSaveFileName(nullptr, tr("Enter filename or select file"), m_saveMatrixPath, tr("*"));
+
+    QFile qFile(m_saveMatrixPath);
+    if (!qFile.open(QIODevice::Text | QIODevice::WriteOnly)) {
+            qCritical() << tr("Perspective transformation file %1 wasn't opened").arg(m_saveMatrixPath);
+    }
+
+    QTextStream saveStream(&qFile);
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            saveStream << m_projMatrix(i, j) << ' ';
+        }
+        saveStream << '\n';
+    }
+}
+
 void MainWindow::onActionProjectiveTransform()
 {
     if (m_vpSplitters.count() && !m_RR.isNull()) {
@@ -362,7 +385,7 @@ void MainWindow::onActionProjectiveTransform()
 
 
         QSize outSize(int(double(m_image.width()) / sin(alpha)), m_image.height());
-        m_vpImageItems.first()->setImage(calc_projection_4points(m_RR->getPoints(), outPoints, m_image, outSize));
+        m_vpImageItems.first()->setImage( calc_projection_4points(m_projMatrix, m_RR->getPoints(), outPoints, m_image, outSize) );
         m_vpImageView.first()->view()->scene()->update();
     }
 }

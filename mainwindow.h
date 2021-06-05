@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QGenericMatrix>
 #include <QGraphicsScene>
 #include "image-item.h"
 #include "image-processing-common.h"
@@ -66,6 +67,7 @@ private slots:
     void onAction4PointsWithLines();
     void onActionProjectiveTransform();
     void onActionPixelRuler();
+    void onActionSavePerspectiveProjectionMatrix();
     //void onSimultaneousScrollCheck(int check);
 
 private:
@@ -75,6 +77,8 @@ private:
     QSharedPointer<ImageView> m_view;
     QImage          m_image;
     QString         m_img_path;
+    QString         m_saveMatrixPath = "./projMatrix.txt";
+    QMatrix3x3      m_projMatrix;
     QSharedPointer<ImageItem> m_item;
     // 3 Additional image viewers. Indexed clockwise
     // main window 0

@@ -19,7 +19,7 @@
 
 // const std::vector<geom::PixelPoint()> &rubberRectPoints
 
-QImage calc_projection_4points(const std::vector<QPointF> &points1, const std::vector<QPointF> &points2, const QImage &imageIn, QSize sizeOut)
+QImage calc_projection_4points(QMatrix3x3 &matrix, const std::vector<QPointF> &points1, const std::vector<QPointF> &points2, const QImage &imageIn, QSize sizeOut)
 {
     // QImage outImage;
     // Convert points from Qt to OpenCV
@@ -37,6 +37,11 @@ QImage calc_projection_4points(const std::vector<QPointF> &points1, const std::v
 
     // cv::warpPerspective(ocv_imageIn, ocv_imageOut, M, cv::Size2d(ocv_imageIn.rows, ocv_imageIn.cols));
     cv::warpPerspective(ocv_imageIn, ocv_imageOut, M, cv::Size2d(sizeOut.width(), sizeOut.height()));
+
+    for (int i = 0; i < M.rows; ++i)
+        for (int j = 0; j < M.cols; ++j) {
+            matrix(i, j) = M.at<float>(j, i);
+        }
 
     // Convert images back to Qt
 
