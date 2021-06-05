@@ -52,6 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, &MainWindow::angleChanged, m_view.get(), &ImageView::rotate);
 
     connect(ui->action4PointsRubberRect, &QAction::triggered, this, &MainWindow::onAction4PointsRubberRect);
+    connect(ui->action4PointsWithLines, &QAction::triggered, this, &MainWindow::onAction4PointsWithLines);
     connect(ui->actionProjectiveTransform, &QAction::triggered, this, &MainWindow::onActionProjectiveTransform);
     connect(ui->actionPixelRuler, &QAction::triggered, this, &MainWindow::onActionPixelRuler);
 }
@@ -78,7 +79,8 @@ void MainWindow::on4WindowsCheck(int check)
     }
 }
 
-void MainWindow::on2WindowsCheck(int check) {
+void MainWindow::on2WindowsCheck(int check)
+{
     if (check) {
         removeAdditionalWindows();
         ui->action4Windows->setChecked(false);
@@ -224,7 +226,8 @@ void MainWindow::hide4Windows()
 
 }
 
-void MainWindow::removeAdditionalWindows() {
+void MainWindow::removeAdditionalWindows()
+{
     if (! m_view.isNull())
         setCentralWidget(m_view.get());
     if (m_vpImageItems.count())
@@ -241,7 +244,8 @@ void MainWindow::removeAdditionalWindows() {
 }*/
 
 int
-MainWindow::openImage() {
+MainWindow::openImage()
+{
     QString fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), m_lastPath, tr("Images (*.png *.bmp *.tif *.xpm *.jpg *.jpeg *.JPG)"));
     // m_settings_dlg->ui->queue_lineEdit->setText(queuePath);
 
@@ -262,22 +266,26 @@ MainWindow::openImage() {
     return 0;
 }
 
-int MainWindow::saveImageAs(const QString &path) {
+int MainWindow::saveImageAs(const QString &path)
+{
 
     return 0;
 }
 
-void MainWindow::onAddVSplitter() {
+void MainWindow::onAddVSplitter()
+{
     QSplitter *vSplitter = new QSplitter;
     vSplitter->setOrientation(Qt::Vertical);
 
 }
 
-void MainWindow::onAddHSplitter() {
+void MainWindow::onAddHSplitter()
+{
 
 }
 
-void MainWindow::onAddDockWidget() {
+void MainWindow::onAddDockWidget()
+{
     QDockWidget *dock = new QDockWidget(tr(""), this);
     addDockWidget(Qt::RightDockWidgetArea, dock);
 }
@@ -294,8 +302,14 @@ void MainWindow::onAction4PointsRubberRect()
     m_scene->update();
 }
 
-void MainWindow::onAction4PointsWithLines() {
+void MainWindow::onAction4PointsWithLines()
+{
+    if (m_RR.isNull()) {
+        onAction4PointsRubberRect();
+    }
 
+    m_RR->setHasAuxLines(true);
+    m_scene->update();
 }
 
 void MainWindow::onActionPixelRuler()
@@ -343,7 +357,8 @@ void MainWindow::onActionProjectiveTransform()
 
         // int width = m_RR->getPoints()[1].rx() - m_RR->getPoints()[0].rx();
         // width
-        double alpha = atan2(m_RR->getPoints()[2].ry() - m_RR->getPoints()[1].ry(), m_RR->getPoints()[1].rx() - m_RR->getPoints()[0].rx());
+        double alpha = atan2(m_RR->getPoints()[2].ry() - m_RR->getPoints()[1].ry(),
+                             m_RR->getPoints()[1].rx() - m_RR->getPoints()[0].rx());
 
 
         QSize outSize(int(double(m_image.width()) / sin(alpha)), m_image.height());

@@ -278,24 +278,43 @@ void RubberRect::paint(QPainter *painter,
         painter->drawEllipse(m_vCorners[t], H_CORNER * thickness, H_CORNER * thickness);
     }
 
-    // QRectF rect1(coord1, QPointF(coord1.x() + H_CORNER * thickness, coord1.y() + H_CORNER * thickness));
-    // painter->drawRect(rect1);
+    if (m_hasAuxLines)
+        paintAuxLines(painter);
+}
 
-    //painter->drawEllipse(coord1, H_CORNER * thickness, H_CORNER * thickness);
+void RubberRect::paintAuxLines(QPainter *painter)
+{
+    painter->drawLine(infiniteLine(m_vCorners[TopLeft], m_vCorners[TopRight]));
+    painter->drawLine(infiniteLine(m_vCorners[BottomRight], m_vCorners[TopRight]));
+    painter->drawLine(infiniteLine(m_vCorners[BottomRight], m_vCorners[BottomLeft]));
+    painter->drawLine(infiniteLine(m_vCorners[TopLeft], m_vCorners[BottomLeft]));
+}
 
-    // QRectF rect2(QPointF(coord2.x() - H_CORNER * thickness, coord2.y()),
-    //              QPointF(coord2.x(), coord2.y() + H_CORNER * thickness));
-    // painter->drawRect(rect2);
-    //painter->drawEllipse(coord2, H_CORNER * thickness, H_CORNER * thickness);
+QLineF RubberRect::infiniteLine(QPointF p1, QPointF p2)
+{
+    // The Idea was taken from https://stackoverflow.com/questions/55444588/drawing-of-infinite-line-in-qt
+    QLineF tmpLine(p1, p2);
+    double direction = tmpLine.angle();
+    QPointF basePoint = p1; //QPointF(200, 200);
 
-    // QRectF rect3(QPointF(coord3.x() - H_CORNER * thickness, coord3.y() - H_CORNER * thickness), coord3);
-    // painter->drawRect(rect3);
-    //painter->drawEllipse(coord3, H_CORNER * thickness, H_CORNER * thickness);
+    double maxLength = sqrt(scene()->width() * scene()->width() + scene()->height() * scene()->height());
 
-    // QRectF rect4(QPointF(coord4.x(), coord4.y() - H_CORNER * thickness),
-    //              QPointF(coord4.x() + H_CORNER * thickness, coord4.y()));
-    // painter->drawRect(rect4);
-    //painter->drawEllipse(coord4, H_CORNER * thickness, H_CORNER * thickness);
+    QLineF line1 = QLineF(basePoint, basePoint + QPointF(1, 0)); // Avoid an invalid line
+    QLineF line2 = QLineF(basePoint, basePoint + QPointF(1, 0));
+
+    // Find the first point outside the scene
+    line1.setLength(maxLength / 2);
+    line1.setAngle(direction);
+
+    // Find the sceond point outside the scene
+    line2.setLength(maxLength / 2);
+    line2.setAngle(direction + 180);
+
+    // Make a new line with the two end points
+    QLineF line = QLineF(line1.p2(), line2.p2());
+
+    // scene()->addItem(new QGraphicsLineItem(line));
+    return line;
 }
 
 /*

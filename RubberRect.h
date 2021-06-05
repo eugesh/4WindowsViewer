@@ -8,6 +8,7 @@
 #include <QGraphicsItem>
 #include <QSet>
 #include <iostream>
+
 #define H_CORNER 10
 
 enum CornerType {
@@ -26,20 +27,20 @@ public:
     void setEditable(bool isEdit) { m_editing = isEdit; }
     bool isEditable() { return m_editing; }
 
-    CornerType  changed_corner(QPointF pos);
-    // void SetSize(int size);
     void setP1(QPointF newp1);
     void setP2(QPointF newp2);
     void setP3(QPointF newp3);
     void setP4(QPointF newp4);
     bool change_coord(QPointF point, CornerType corner);
+    void setCenter(QPointF C);
+    std::vector<QPointF> getPoints() const { return m_vCorners; }
+    bool hasAuxLines() { return m_hasAuxLines; }
+    void setHasAuxLines(bool has) { m_hasAuxLines = has; }
+
+protected:
     virtual QRectF boundingRect() const override;
     void paint(QPainter *painter,
                const QStyleOptionGraphicsItem *option, QWidget *widget) override;
-    void setCenter(QPointF C);
-    std::vector<QPointF> getPoints() const { return m_vCorners; }
-
-protected:
     //! Oтработка нажатия на кнопки мыши.
     virtual void  mousePressEvent(QGraphicsSceneMouseEvent * event) override;
     //! Oтработка отпускания кнопки мыши.
@@ -50,6 +51,11 @@ protected:
     //                        const QVariant &value);
 
 private:
+    CornerType changed_corner(QPointF pos);
+    void paintAuxLines(QPainter *painter);
+    QLineF infiniteLine(QPointF p1, QPointF p2);
+
+private:
     QColor m_OutlineColor;
     bool bchanges;
     bool m_editing;
@@ -58,10 +64,9 @@ private:
     int thickness; // Толщина рамки.
     QPointF Center;
     QRectF max_imgRect;
-    // QSizeF sizeF;
-    // QPointF coord1, coord2, coord3, coord4;
     std::vector<QPointF> m_vCorners;
     // std::vector<geom::PixelPoint> m_vRRPoints;
+    bool m_hasAuxLines = false;
 };
 
 #endif
