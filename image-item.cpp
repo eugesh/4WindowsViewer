@@ -38,7 +38,9 @@ ImageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 
 QImage ImageItem::setFiltered(const QImage &img)
 {
-    m_image_part2draw = img; return m_image_part2draw;
+    m_image_part2draw = img;
+    scene()->update();
+    return m_image_part2draw;
 }
 
 void ImageItem::mousePressEvent(QGraphicsSceneMouseEvent *event)

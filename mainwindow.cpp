@@ -3,6 +3,7 @@
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QGraphicsItem>
+#include <QHBoxLayout>
 #include <QSignalMapper>
 #include <QSplitter>
 
@@ -58,6 +59,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->action4PointsRubberRect, &QAction::triggered, this, &MainWindow::onAction4PointsRubberRect);
     connect(ui->action4PointsWithLines, &QAction::triggered, this, &MainWindow::onAction4PointsWithLines);
     connect(ui->actionProjectiveTransform, &QAction::triggered, this, &MainWindow::onActionProjectiveTransform);
+    connect(ui->actionLoadPerspectiveProjectionMatrix, &QAction::triggered,
+            this, &MainWindow::onActionLoadPerspectiveProjectionMatrix);
     connect(ui->actionPixelRuler, &QAction::triggered, this, &MainWindow::onActionPixelRuler);
 }
 
@@ -130,6 +133,8 @@ void MainWindow::changeColorSpace(ColorSpace s)
 
     for (int i = 0; i < m_vpImageView.count(); ++i) {
         m_vpImageView[i].get()->view()->scene()->update();
+        m_vpImageView[i]->changeColorSpace(m_colorSpace);
+        m_vpImageView[i]->changeChannelNumber(i);
     }
 }
 
@@ -145,19 +150,19 @@ void MainWindow::create4Windows()
 
     h1Splitter->addWidget(m_view.get());
 
-    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Top right view")));
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Top right view", this)));
     QGraphicsScene *scene = new QGraphicsScene(this);
     m_vpImageView.last()->view()->setScene(scene);
     h1Splitter->addWidget(m_vpImageView.last().get());
 
-    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom left view")));
-    scene = new QGraphicsScene(this);
-    m_vpImageView.last()->view()->setScene(scene);
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom left view", this)));
+    QGraphicsScene *scene2 = new QGraphicsScene(this);
+    m_vpImageView.last()->view()->setScene(scene2);
     h2Splitter->addWidget(m_vpImageView.last().get());
 
-    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom right view")));
-    scene = new QGraphicsScene(this);
-    m_vpImageView.last()->view()->setScene(scene);
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom right view", this)));
+    QGraphicsScene *scene3 = new QGraphicsScene(this);
+    m_vpImageView.last()->view()->setScene(scene3);
     h2Splitter->addWidget(m_vpImageView.last().get());
 
     QHBoxLayout *layout = new QHBoxLayout;
@@ -183,7 +188,7 @@ void MainWindow::create2Windows()
 
     hSplitter->addWidget(m_view.get());
 
-    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Top right view")));
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Top right view", this)));
     QGraphicsScene *scene = new QGraphicsScene(this);
     m_vpImageView.last()->view()->setScene(scene);
     hSplitter->addWidget(m_vpImageView.last().get());
@@ -345,6 +350,42 @@ void MainWindow::onActionSavePerspectiveProjectionMatrix()
             saveStream << m_projMatrix(i, j) << ' ';
         }
         saveStream << '\n';
+    }
+    saveStream << m_vpImageItems.first()->getImage().width() << ' ';
+    saveStream << m_vpImageItems.first()->getImage().height();
+}
+
+void MainWindow::onActionLoadPerspectiveProjectionMatrix()
+{
+    m_saveMatrixPath = QFileDialog::getOpenFileName(this, tr("Choose matrix file"), m_saveMatrixPath, tr("*"));
+
+    QFile qFile(m_saveMatrixPath);
+    if (!qFile.open(QIODevice::Text | QIODevice::ReadOnly)) {
+            qCritical() << tr("Perspective transformation file %1 wasn't opened").arg(m_saveMatrixPath);
+    }
+
+    QTextStream saveStream(&qFile);
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            saveStream >> m_projMatrix(i, j);
+        }
+    }
+
+    QSize outSize;
+    int width, height;
+    saveStream >> width;
+    saveStream >> height;
+    outSize.setWidth(width);
+    outSize.setHeight(height);
+    applyProjectiveTransform(outSize);
+}
+
+void MainWindow::applyProjectiveTransform(QSize outSize)
+{
+    if (!m_vpImageItems.isEmpty() && !m_vpImageItems.first().isNull()) {
+        m_vpImageItems.first()->setImage(applyPerspectiveProjection(m_projMatrix, m_image, outSize));
+        m_vpImageItems.first()->scene()->update();
     }
 }
 

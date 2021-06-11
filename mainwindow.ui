@@ -32,6 +32,7 @@
     <addaction name="actionOpen_image"/>
     <addaction name="actionSaveImage"/>
     <addaction name="actionSavePerspectiveProjectionMatrix"/>
+    <addaction name="actionLoadPerspectiveProjectionMatrix"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -204,6 +205,11 @@
   <action name="actionSavePerspectiveProjectionMatrix">
    <property name="text">
     <string>Save perspective projection matrix</string>
+   </property>
+  </action>
+  <action name="actionLoadPerspectiveProjectionMatrix">
+   <property name="text">
+    <string>Load perspective projection matrix</string>
    </property>
   </action>
  </widget>

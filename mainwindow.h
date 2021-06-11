@@ -38,6 +38,7 @@ public:
     ~MainWindow() override;
 
 private:
+    void applyProjectiveTransform(QSize outSize);
     void create4Windows();
     void create2Windows();
     void openImages4Windows();
@@ -68,6 +69,7 @@ private slots:
     void onActionProjectiveTransform();
     void onActionPixelRuler();
     void onActionSavePerspectiveProjectionMatrix();
+    void onActionLoadPerspectiveProjectionMatrix();
     //void onSimultaneousScrollCheck(int check);
 
 private:

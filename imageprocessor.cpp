@@ -72,7 +72,7 @@ QImage getChannel(const QImage & InImg, ColorName chName)
 
     for (int i = 0; i < InImg.height(); ++i) {
         for (int j = 0; j < InImg.width(); ++j) {
-            int val;
+            int val = 0;
             switch (chName) {
             case gray:
                 val = qGray(InImg.pixel(j, i));
@@ -87,11 +87,13 @@ QImage getChannel(const QImage & InImg, ColorName chName)
                 val = qBlue(InImg.pixel(j, i));
                 break;
             case hue:
-                val = InImg.pixelColor(j, i).hue();
+                val = InImg.pixelColor(j, i).hsvHue();
                 break;
             case saturation:
+                val = InImg.pixelColor(j, i).hsvSaturation();
                 break;
             case value:
+                val = InImg.pixelColor(j, i).value();
                 break;
             case lightness:
                 break;

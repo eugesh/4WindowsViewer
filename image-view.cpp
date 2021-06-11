@@ -17,6 +17,31 @@
 constexpr double ZOOM_SCALE_STEP = 6.0;
 constexpr double ANGLE_STEP = 1.0;
 
+QString textFromColorSpace(geom::ColorSpace s) {
+    switch (int(s)) {
+    case geom::RGB: return "RGB";
+    case geom::HSV: return "HSV";
+    case geom::HSL: return "HSL";
+    case geom::HSI: return "HSI";
+    }
+    return {};
+}
+
+QString textFromColorName(geom::ColorName c) {
+    switch (int(c)) {
+    case geom::gray: return "Gray";
+    case geom::red: return "Red";
+    case geom::green: return "Green";
+    case geom::blue: return "Blue";
+    case geom::hue: return "Hue";
+    case geom::saturation: return "Saturation";
+    case geom::value: return "Value";
+    case geom::lightness: return "Lightness";
+    case geom::intensity: return "Intensity";
+    }
+    return {};
+}
+
 #if QT_CONFIG(wheelevent)
 void GraphicsView::wheelEvent(QWheelEvent *e)
 {
@@ -130,7 +155,7 @@ ImageView::ImageView(const QString &name, QWidget *parent)
     dragModeButton->setCheckable(true);
     dragModeButton->setChecked(false);
     antialiasButton = new QToolButton;
-    antialiasButton->setText(tr("Antialiasing"));
+    antialiasButton->setText(tr("Aliasing"));
     antialiasButton->setCheckable(true);
     antialiasButton->setChecked(false);
     openGlButton = new QToolButton;
@@ -141,8 +166,8 @@ ImageView::ImageView(const QString &name, QWidget *parent)
 #else
     openGlButton->setEnabled(false);
 #endif
-    printButton = new QToolButton;
-    printButton->setIcon(QIcon(QPixmap(":/images/fileprint.png")));
+    // printButton = new QToolButton;
+    // printButton->setIcon(QIcon(QPixmap(":/images/fileprint.png")));
 
     QButtonGroup *pointerModeGroup = new QButtonGroup(this);
     pointerModeGroup->setExclusive(true);
@@ -157,7 +182,7 @@ ImageView::ImageView(const QString &name, QWidget *parent)
     labelLayout->addStretch();
     labelLayout->addWidget(antialiasButton);
     labelLayout->addWidget(openGlButton);
-    labelLayout->addWidget(printButton);
+    // labelLayout->addWidget(printButton);
 
     QGridLayout *topLayout = new QGridLayout;
     topLayout->addLayout(labelLayout, 0, 0);
@@ -242,7 +267,8 @@ void ImageView::toggleAntialiasing()
 
 void ImageView::print()
 {
-#if QT_CONFIG(printdialog)
+//#if QT_CONFIG(printdialog)
+#if defined(QT_PRINTSUPPORT_LIB)
     QPrinter printer;
     QPrintDialog dialog(&printer, this);
     if (dialog.exec() == QDialog::Accepted) {
@@ -275,4 +301,10 @@ void ImageView::rotateLeft()
 void ImageView::rotateRight()
 {
     rotateSlider->setValue(rotateSlider->value() + 10);
+}
+
+void ImageView::changeChannelNumber(int cn)
+{
+    m_channelNumber = cn;
+    label->setText(textFromColorName(ColorName(cn + m_colorSpace * 3 + red)));
 }

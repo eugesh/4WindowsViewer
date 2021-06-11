@@ -19,7 +19,7 @@ endif()
 
 set(OpenCV_LIBS opencv_core opencv_highgui opencv_imgproc opencv_videoio opencv_calib3d opencv_features2d opencv_xfeatures2d opencv_flann opencv_photo opencv_aruco) #opencv_contrib
 
-find_package(Qt5 COMPONENTS Gui Core Widgets OpenGL PrintSupport REQUIRED)
+find_package(Qt5 COMPONENTS Gui Core Widgets OpenGL REQUIRED) #PrintSupport
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -56,5 +56,5 @@ set(raster_view_resource_files
 #)
 
 if (UNIX)
-    target_link_libraries(raster_view ${OpenCV_LIBS} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL Qt::PrintSupport stdc++ m)
+    target_link_libraries(raster_view ${OpenCV_LIBS} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL stdc++ m) # Qt::PrintSupport
 endif()

@@ -14,7 +14,7 @@ public:
 
     QRectF boundingRect() const override;
     //QPainterPath shape() const override;
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget=nullptr) override;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr) override;
 
     // temporal method.
     void setImage(const QImage &img) {
