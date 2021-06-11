@@ -12,6 +12,7 @@ QT_BEGIN_NAMESPACE
 class QLabel;
 class QSlider;
 class QToolButton;
+class QPushButton;
 QT_END_NAMESPACE
 
 class ImageView;
@@ -48,6 +49,7 @@ public:
 signals:
     void scaleChanged(double value);
     void angleChanged(double value);
+    void tuneSliderChanged(int value);
 
 public slots:
     void zoomIn(int level = 1);
@@ -64,6 +66,8 @@ private slots:
     void print();
     void rotateLeft();
     void rotateRight();
+    void onSaveImageButton();
+    void onTuneSliderValueChanged(int value);
 
 private:
     GraphicsView *graphicsView;
@@ -79,6 +83,8 @@ private:
     QSlider *rotateSlider;
     ColorSpace m_colorSpace;
     int m_channelNumber;
+    QSlider *m_tuneSlider;
+    QPushButton *m_saveImageButton;
 };
 
 #endif // IMAGEVIEW_H

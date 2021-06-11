@@ -1,6 +1,8 @@
 #ifndef IMAGEPROCESSINGCOMMON_H
 #define IMAGEPROCESSINGCOMMON_H
 
+#include <QString>
+
 namespace geom {
 
 enum ColorSpace {
@@ -23,5 +25,10 @@ enum ColorName {
 };
 
 }
+
+//QString textFromColorSpace(geom::ColorSpace s);
+//QString textFromColorName(geom::ColorName c);
+
+
 
 #endif // IMAGEPROCESSINGCOMMON_H

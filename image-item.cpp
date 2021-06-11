@@ -3,6 +3,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include "image-item.h"
 
+constexpr int DEBUG = 1;
+
 ImageItem::ImageItem()
 {
     setZValue(100);
@@ -33,7 +35,18 @@ ImageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     Q_UNUSED(widget)
     Q_UNUSED(option)
     // painter->drawImage(QPoint(0,0), m_image_part2draw);
-    painter->drawImage(cur_pose, m_image_part2draw);
+    if (! m_inUpdateProcess) {
+        m_inUpdateProcess = true;
+        Qt::ImageConversionFlag flag = Qt::ImageConversionFlag::AutoColor;
+        /*if (m_image_part2draw.format() == QImage::Format_Indexed8) {
+            flag = Qt::ImageConversionFlag::MonoOnly;
+            m_image_part2draw.save("tmp/outGray.png");
+        }*/
+        QImage img = m_image_part2draw.convertToFormat(QImage::Format_ARGB32, Qt::ImageConversionFlag::ColorOnly);
+        if (DEBUG) img.save("tmp/befor_draw.png");
+        painter->drawImage(cur_pose, img, boundingRect(), flag);
+    }
+    m_inUpdateProcess = false;
 }
 
 QImage ImageItem::setFiltered(const QImage &img)

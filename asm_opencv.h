@@ -17,6 +17,10 @@
 
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/types_c.h"
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui.hpp>
+
+constexpr bool DEBUG = 1;
 
 /*
     Endianness
@@ -50,7 +54,7 @@
 
 namespace ASM {
     // NOTE: This does not cover all cases - it should be easy to add new ones as required.
-    inline QImage  cvMatToQImage( const cv::Mat &inMat )
+    inline QImage  cvMatToQImage(const cv::Mat &inMat)
     {
         switch (inMat.type())
         {
@@ -60,7 +64,7 @@ namespace ASM {
                 QImage image(inMat.data,
                              inMat.cols, inMat.rows,
                              static_cast<int>(inMat.step),
-                             QImage::Format_ARGB32 );
+                             QImage::Format_ARGB32);
 
                 return image;
             }
@@ -79,33 +83,33 @@ namespace ASM {
             // 8-bit, 1 channel
             case CV_8UC1:
             {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 5, 0)
+/*#if QT_VERSION >= QT_VERSION_CHECK(5, 5, 0)
                 QImage image(inMat.data,
                              inMat.cols, inMat.rows,
                              static_cast<int>(inMat.step),
-                             QImage::Format_Grayscale8 );
-#else
-            static QVector<QRgb>  sColorTable;
+                             QImage::Format_Grayscale8);
+                image.setColorCount(256);
+#else*/
+                static QVector<QRgb> sColorTable;
 
-            // only create our color table the first time
-            if ( sColorTable.isEmpty() )
-            {
-               sColorTable.resize( 256 );
+                // only create our color table the first time
+                if (sColorTable.isEmpty()) {
+                    sColorTable.resize(256);
 
-               for ( int i = 0; i < 256; ++i )
-               {
-                  sColorTable[i] = qRgb( i, i, i );
-               }
-            }
+                    for (int i = 0; i < 256; ++i) {
+                        sColorTable[i] = qRgb(i, i, i);
+                    }
+                }
 
-            QImage image( inMat.data,
-                          inMat.cols, inMat.rows,
-                          static_cast<int>(inMat.step),
-                          QImage::Format_Indexed8 );
+                QImage image(inMat.data,
+                             inMat.cols, inMat.rows,
+                             static_cast<int>(inMat.step),
+                             QImage::Format_Indexed8);
 
-            image.setColorTable( sColorTable );
-#endif
+                image.setColorTable(sColorTable);
+//#endif
 
+                if (DEBUG) image.save("tmp/qimage_Indexed8.png");
                 return image;
             }
 
@@ -134,11 +138,11 @@ namespace ASM {
             case QImage::Format_ARGB32:
             case QImage::Format_ARGB32_Premultiplied:
             {
-                cv::Mat  mat(inImage.height(), inImage.width(),
-                             CV_8UC4,
-                             const_cast<uchar*>(inImage.bits()),
-                             static_cast<size_t>(inImage.bytesPerLine())
-                             );
+                cv::Mat mat(inImage.height(), inImage.width(),
+                            CV_8UC4,
+                            const_cast<uchar*>(inImage.bits()),
+                            static_cast<size_t>(inImage.bytesPerLine())
+                            );
 
                 return (inCloneImageData ? mat.clone() : mat);
             }
@@ -146,7 +150,7 @@ namespace ASM {
             // 8-bit, 3 channel
             case QImage::Format_RGB32:
             {
-                if ( !inCloneImageData )
+                if (!inCloneImageData)
                 {
                     qWarning() << "ASM::QImageToCvMat() - Conversion requires cloning so we don't modify the original QImage data";
                 }
@@ -157,9 +161,9 @@ namespace ASM {
                             static_cast<size_t>(inImage.bytesPerLine())
                             );
 
-                cv::Mat  matNoAlpha;
+                cv::Mat matNoAlpha;
 
-                cv::cvtColor( mat, matNoAlpha, cv::COLOR_BGRA2BGR );   // drop the all-white alpha channel
+                cv::cvtColor(mat, matNoAlpha, cv::COLOR_BGRA2BGR);   // drop the all-white alpha channel
 
                 return matNoAlpha;
             }
@@ -167,12 +171,12 @@ namespace ASM {
             // 8-bit, 3 channel
             case QImage::Format_RGB888:
             {
-                if ( !inCloneImageData )
+                if (!inCloneImageData)
                 {
                     qWarning() << "ASM::QImageToCvMat() - Conversion requires cloning so we don't modify the original QImage data";
                 }
 
-                QImage   swapped = inImage.rgbSwapped();
+                QImage swapped = inImage.rgbSwapped();
 
                 return cv::Mat(swapped.height(), swapped.width(),
                                CV_8UC3,
@@ -182,6 +186,7 @@ namespace ASM {
              }
 
              // 8-bit, 1 channel
+             //case QImage::Format_Grayscale8:
              case QImage::Format_Indexed8:
              {
                  cv::Mat mat(inImage.height(), inImage.width(),
@@ -190,6 +195,7 @@ namespace ASM {
                              static_cast<size_t>(inImage.bytesPerLine())
                              );
 
+                 if (DEBUG) cv::imwrite("tmp/mat.png", mat);
                  return (inCloneImageData ? mat.clone() : mat);
              }
 

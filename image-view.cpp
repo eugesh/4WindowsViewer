@@ -158,6 +158,11 @@ ImageView::ImageView(const QString &name, QWidget *parent)
     antialiasButton->setText(tr("Aliasing"));
     antialiasButton->setCheckable(true);
     antialiasButton->setChecked(false);
+    m_tuneSlider = new QSlider(Qt::Orientation::Horizontal, this);
+    m_tuneSlider->setMaximum(255);
+    m_tuneSlider->setMinimum(0);
+    m_saveImageButton = new QPushButton;
+    m_saveImageButton->setText(tr("Save"));
     openGlButton = new QToolButton;
     openGlButton->setText(tr("OpenGL"));
     openGlButton->setCheckable(true);
@@ -180,6 +185,7 @@ ImageView::ImageView(const QString &name, QWidget *parent)
     labelLayout->addWidget(selectModeButton);
     labelLayout->addWidget(dragModeButton);
     labelLayout->addStretch();
+    labelLayout->addWidget(m_tuneSlider);
     labelLayout->addWidget(antialiasButton);
     labelLayout->addWidget(openGlButton);
     // labelLayout->addWidget(printButton);
@@ -207,7 +213,11 @@ ImageView::ImageView(const QString &name, QWidget *parent)
     connect(rotateRightIcon, SIGNAL(clicked()), this, SLOT(rotateRight()));
     connect(zoomInIcon, SIGNAL(clicked()), this, SLOT(zoomIn()));
     connect(zoomOutIcon, SIGNAL(clicked()), this, SLOT(zoomOut()));
-    connect(printButton, SIGNAL(clicked()), this, SLOT(print()));
+    connect(m_saveImageButton, &QPushButton::clicked, this, &ImageView::onSaveImageButton);
+    connect(m_tuneSlider, &QSlider::valueChanged, this, &ImageView::onTuneSliderValueChanged);
+    // connect(printButton, SIGNAL(clicked()), this, SLOT(print()));
+
+
 
     setupMatrix();
 }
@@ -215,6 +225,16 @@ ImageView::ImageView(const QString &name, QWidget *parent)
 QGraphicsView *ImageView::view() const
 {
     return static_cast<QGraphicsView *>(graphicsView);
+}
+
+void ImageView::onSaveImageButton()
+{
+
+}
+
+void ImageView::onTuneSliderValueChanged(int value)
+{
+    emit tuneSliderChanged(value);
 }
 
 void ImageView::resetView()

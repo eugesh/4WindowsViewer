@@ -70,6 +70,7 @@ private slots:
     void onActionPixelRuler();
     void onActionSavePerspectiveProjectionMatrix();
     void onActionLoadPerspectiveProjectionMatrix();
+    void onTuneSliderChanged(int val);
     //void onSimultaneousScrollCheck(int check);
 
 private:

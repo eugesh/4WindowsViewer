@@ -111,6 +111,11 @@ void MainWindow::onActionHSV()
     changeColorSpace(HSV);
     ui->actionRGB->setChecked(false);
     ui->actionHSI->setChecked(false);
+
+    /*for (int i = 0; i < m_vpImageView.size(); ++i) {
+        m_vpImageView[i]->changeColorSpace(m_colorSpace);
+        m_vpImageView[i]->changeChannelNumber(i);
+    }*/
 }
 
 void MainWindow::onActionHSI()
@@ -173,6 +178,7 @@ void MainWindow::create4Windows()
     for (int i = 0; i < m_vpImageView.size(); ++i) {
         connect(m_vpImageView[i].get(), &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
         connect(m_vpImageView[i].get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
+        connect(m_vpImageView[i].get(), &ImageView::tuneSliderChanged, this, &MainWindow::onTuneSliderChanged);
         connect(this, &MainWindow::scaleChanged, m_vpImageView[i].get(), &ImageView::zoomIn);
         connect(this, &MainWindow::angleChanged, m_vpImageView[i].get(), &ImageView::rotate);
     }
@@ -180,6 +186,34 @@ void MainWindow::create4Windows()
     m_vpSplitters.push_back(h1Splitter);
     m_vpSplitters.push_back(h2Splitter);
     m_vpSplitters.push_back(vSplitter);
+}
+
+void MainWindow::onTuneSliderChanged(int val)
+{
+    if (ImageView* view = qobject_cast<ImageView*> (sender())) {
+        foreach (auto *item, view->view()->scene()->items()) {
+            if (auto imageItem = dynamic_cast<ImageItem*> (item)) {
+                // imageItem->setFiltered(geom::getChannel(m_item->getImage(), m_colorSpace, i));
+                QImage img = imageItem->getImage();
+                if (DEBUG) img.save("tmp/img.png");
+                QImage imgBW(img.size(), QImage::Format_Indexed8);
+                static QVector<QRgb> sColorTable;
+                if (sColorTable.isEmpty()) {
+                    sColorTable.resize(256);
+
+                    for (int i = 0; i < 256; ++i) {
+                        sColorTable[i] = qRgb(i, i, i);
+                    }
+                }
+                imgBW.setColorTable(sColorTable);
+                imgBW = (applyBWThreshold(img, val));
+                if (DEBUG) imgBW.save("tmp/BW.png");
+                imageItem->setFiltered(imgBW);
+                view->view()->scene()->update();
+            }
+        }
+        // m_vpImageItems[i]->setFiltered(geom::getChannel(m_item->getImage(), m_colorSpace, i));
+    }
 }
 
 void MainWindow::create2Windows()
@@ -201,6 +235,7 @@ void MainWindow::create2Windows()
     for (int i = 0; i < m_vpImageView.size(); ++i) {
         connect(m_vpImageView[i].get(), &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
         connect(m_vpImageView[i].get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
+        connect(m_vpImageView[i].get(), &ImageView::tuneSliderChanged, this, &MainWindow::onTuneSliderChanged);
         connect(this, &MainWindow::scaleChanged, m_vpImageView[i].get(), &ImageView::zoomIn);
         connect(this, &MainWindow::angleChanged, m_vpImageView[i].get(), &ImageView::rotate);
     }
@@ -221,7 +256,7 @@ void MainWindow::openImages4Windows()
             m_vpImageView[i]->view()->setScene(scene);
             scene->update();
         }
-        m_vpImageItems[i]->setFiltered(geom::getChannel(m_item->getImage(), m_colorSpace, i));
+        m_vpImageItems[i]->setImage(geom::getChannel(m_item->getImage(), m_colorSpace, i));
     }
 }
 
@@ -265,6 +300,8 @@ MainWindow::openImage()
     m_lastPath = fi.absoluteDir().path();
 
     m_image = QImage(fullFilePath);
+
+    std::cout << "input image.format(): " << m_image.format() << std::endl;
 
     m_item->setImage(m_image);
 

@@ -61,7 +61,8 @@ int cv2qtImageFormat(int cvFormat)
 
 cv::Mat imageConverter(const QImage &qimage)
 {
-    cv::Mat mat = ASM::QImageToCvMat(qimage, false);
+    std::cout << "qimage.format(): " << qimage.format() << std::endl;
+    cv::Mat mat = ASM::QImageToCvMat(qimage, true);
 
 
 
@@ -70,11 +71,11 @@ cv::Mat imageConverter(const QImage &qimage)
 
 QImage imageConverter(const cv::Mat &mat)
 {
-    QImage qimage = ASM::cvMatToQImage(mat);
+    //QImage qimage = ASM::cvMatToQImage(mat);
 
+    return ASM::cvMatToQImage(mat);
 
-
-    return qimage;
+    //return qimage;
 }
 
 #endif // OCV_QT_H

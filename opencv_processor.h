@@ -19,7 +19,7 @@
 #include <opencv2/calib3d.hpp>
 
 // const std::vector<geom::PixelPoint()> &rubberRectPoints
-constexpr int DEBUG = 1;
+//constexpr int DEBUG = 1;
 
 // @MOVE_TO_LIB, @MOVETOLIB
 //QMatrix3x3
@@ -113,6 +113,22 @@ QImage calc_projection_4points(QMatrix3x3 &matrix, const std::vector<QPointF> &p
     // Convert images back to Qt
 
     return imageConverter(ocv_imageOut);
+}
+
+QImage applyBWThreshold(const QImage &qimg, int threshold, bool isInverse = false)
+{
+    cv::Mat mat = imageConverter(qimg);
+    cv::Mat outMat;
+
+    // CV_EXPORTS_W double threshold( InputArray src, OutputArray dst,
+    // double thresh, double maxval, int type );
+    if (DEBUG) cv::imwrite("tmp/mat_before_threshold.png", mat);
+    cv::threshold(mat, outMat, threshold, 255, cv::THRESH_BINARY + isInverse);
+
+    if (DEBUG) cv::imwrite("tmp/outMat_threshold.png", outMat);
+    // std::cout << outMat << std::endl;
+
+    return imageConverter(outMat);
 }
 
 #endif // OPENCV_PROCESSOR_H

@@ -38,7 +38,7 @@ private:
     // Filtered
     QImage m_image_part2draw;
     QPointF cur_pose;
-
+    bool m_inUpdateProcess = false;
 };
 
 #endif // IMAGEITEM_H
