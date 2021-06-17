@@ -1,16 +1,8 @@
 #ifndef ASM_OPENCV_H
 #define ASM_OPENCV_H
 
-// Taken from https://github.com/asmaloney/asmOpenCV
-
-/**
-   Functions to convert between OpenCV's cv::Mat and Qt's QImage and QPixmap.
-
-   Andy Maloney
-   https://asmaloney.com/2013/11/code/converting-between-cvmat-and-qimage-or-qpixmap
-**/
-
 #include <QDebug>
+#include <QColor>
 #include <QImage>
 #include <QPixmap>
 #include <QtGlobal>
@@ -20,7 +12,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 
-constexpr bool DEBUG = 0;
+constexpr bool DEBUG = 1;
 
 /*
     Endianness
@@ -61,10 +53,20 @@ namespace ASM {
             // 8-bit, 4 channel
             case CV_8UC4:
             {
-                QImage image(inMat.data,
-                             inMat.cols, inMat.rows,
-                             static_cast<int>(inMat.step),
+                QImage image(inMat.cols, inMat.rows,
                              QImage::Format_ARGB32);
+
+                for (auto i = 0; i < inMat.rows; ++i) {
+                    for (auto j = 0; j < inMat.cols; ++j) {
+                        cv::Vec4b intensity = inMat.at<cv::Vec4b>(j, i);
+                        QColor color;
+                        color.setAlpha(intensity[3]);
+                        color.setRed(intensity[2]);
+                        color.setGreen(intensity[1]);
+                        color.setBlue(intensity[0]);
+                        image.setPixelColor(j, i, color);
+                    }
+                }
 
                 return image;
             }
@@ -72,10 +74,19 @@ namespace ASM {
             // 8-bit, 3 channel
             case CV_8UC3:
             {
-                QImage image(inMat.data,
-                             inMat.cols, inMat.rows,
-                             static_cast<int>(inMat.step),
-                             QImage::Format_RGB888);
+                QImage image(inMat.cols, inMat.rows, QImage::Format_RGB888);
+
+                for (auto i = 0; i < inMat.rows; ++i) {
+                    for (auto j = 0; j < inMat.cols; ++j) {
+                        cv::Vec3b intensity = inMat.at<cv::Vec3b>(j, i);
+                        QColor color;
+                        color.setRed(intensity[2]);
+                        color.setGreen(intensity[1]);
+                        color.setBlue(intensity[0]);
+                        image.setPixelColor(j, i, color);
+                    }
+                }
+
 
                 return image.rgbSwapped();
             }
@@ -92,6 +103,9 @@ namespace ASM {
 #else*/
                 static QVector<QRgb> sColorTable;
 
+                QImage image(inMat.cols, inMat.rows,
+                             QImage::Format_Indexed8);
+
                 // only create our color table the first time
                 if (sColorTable.isEmpty()) {
                     sColorTable.resize(256);
@@ -101,14 +115,15 @@ namespace ASM {
                     }
                 }
 
-                QImage image(inMat.data,
-                             inMat.cols, inMat.rows,
-                             static_cast<int>(inMat.step),
-                             QImage::Format_Indexed8);
-
-                memcpy(image.bits(), inMat.data, size_t(inMat.cols * inMat.rows) * sizeof (uchar));
-
                 image.setColorTable(sColorTable);
+
+                //memcpy(image.bits(), inMat.data, size_t(inMat.cols * inMat.rows) * sizeof (uchar));
+
+                for (auto i = 0; i < inMat.rows; ++i) {
+                    for (auto j = 0; j < inMat.cols; ++j) {
+                        image.setPixel(j, i, inMat.at<uchar>(i, j));
+                    }
+                }
 //#endif
 
                 if (DEBUG) image.save("tmp/qimage_Indexed8.png");
@@ -140,11 +155,17 @@ namespace ASM {
             case QImage::Format_ARGB32:
             case QImage::Format_ARGB32_Premultiplied:
             {
-                cv::Mat mat(inImage.height(), inImage.width(),
-                            CV_8UC4,
-                            const_cast<uchar*>(inImage.bits()),
-                            static_cast<size_t>(inImage.bytesPerLine())
-                            );
+                cv::Mat mat(inImage.height(), inImage.width(), CV_8UC4);
+
+                for (auto i = 0; i < inImage.height(); ++i) {
+                    for (auto j = 0; j < inImage.width(); ++j) {
+                        // mat.at<uchar>(i, j) = qGray(inImage.pixel(j, i));
+                        mat.at<cv::Vec4b>(j, i)[0] = inImage.pixelColor(j, i).blue();
+                        mat.at<cv::Vec4b>(j, i)[1] = inImage.pixelColor(j, i).green();
+                        mat.at<cv::Vec4b>(j, i)[2] = inImage.pixelColor(j, i).red();
+                        mat.at<cv::Vec4b>(j, i)[3] = inImage.pixelColor(j, i).alpha();
+                    }
+                }
 
                 return (inCloneImageData ? mat.clone() : mat);
             }
@@ -157,17 +178,22 @@ namespace ASM {
                     qWarning() << "ASM::QImageToCvMat() - Conversion requires cloning so we don't modify the original QImage data";
                 }
 
-                cv::Mat mat(inImage.height(), inImage.width(),
-                            CV_8UC4,
-                            const_cast<uchar*>(inImage.bits()),
-                            static_cast<size_t>(inImage.bytesPerLine())
-                            );
+                cv::Mat mat(inImage.height(), inImage.width(), CV_8UC3);
 
-                cv::Mat matNoAlpha;
+                //cv::Mat matNoAlpha;
 
-                cv::cvtColor(mat, matNoAlpha, cv::COLOR_BGRA2BGR);   // drop the all-white alpha channel
+                //cv::cvtColor(mat, matNoAlpha, cv::COLOR_BGRA2BGR);   // drop the all-white alpha channel
 
-                return matNoAlpha;
+                for (auto i = 0; i < inImage.height(); ++i) {
+                    for (auto j = 0; j < inImage.width(); ++j) {
+                        // mat.at<uchar>(i, j) = qGray(inImage.pixel(j, i));
+                        mat.at<cv::Vec3b>(j, i)[0] = inImage.pixelColor(j, i).blue();
+                        mat.at<cv::Vec3b>(j, i)[1] = inImage.pixelColor(j, i).green();
+                        mat.at<cv::Vec3b>(j, i)[2] = inImage.pixelColor(j, i).red();
+                    }
+                }
+
+                return mat;
             }
 
             // 8-bit, 3 channel
@@ -191,13 +217,16 @@ namespace ASM {
              //case QImage::Format_Grayscale8:
              case QImage::Format_Indexed8:
              {
-                 cv::Mat mat(inImage.height(), inImage.width(),
-                             CV_8UC1,
-                             const_cast<uchar*>(inImage.bits()),
-                             static_cast<size_t>(inImage.bytesPerLine())
-                             );
+                 cv::Mat mat(inImage.height(), inImage.width(), CV_8UC1);
 
-                 memcpy(mat.data, inImage.bits(), size_t(inImage.height() * inImage.width()) * sizeof (uchar));
+                 //memcpy(mat.data, inImage.bits(), size_t(inImage.height() * inImage.width()) * sizeof (uchar));
+
+
+                 for (auto i = 0; i < inImage.height(); ++i) {
+                     for (auto j = 0; j < inImage.width(); ++j) {
+                         mat.at<uchar>(i, j) = qGray(inImage.pixel(j, i));
+                     }
+                 }
 
                  if (DEBUG) cv::imwrite("tmp/mat_converted.png", mat);
                  return (inCloneImageData ? mat.clone() : mat);

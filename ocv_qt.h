@@ -1,7 +1,8 @@
 #ifndef OCV_QT_H
 #define OCV_QT_H
 
-#include "asm_opencv.h"
+// #include "asm_opencv.h"
+#include "opencv_qt_pixelwise.h"
 
 #include <vector>
 #include <opencv/cv.h>
@@ -73,7 +74,7 @@ QImage imageConverter(const cv::Mat &mat)
 {
     //QImage qimage = ASM::cvMatToQImage(mat);
 
-    return ASM::cvMatToQImage(mat);
+    return ASM::cvMatToQImage(mat.clone());
 
     //return qimage;
 }

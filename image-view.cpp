@@ -186,6 +186,7 @@ ImageView::ImageView(const QString &name, QWidget *parent)
     labelLayout->addWidget(dragModeButton);
     labelLayout->addStretch();
     labelLayout->addWidget(m_tuneSlider);
+    labelLayout->addWidget(m_saveImageButton);
     labelLayout->addWidget(antialiasButton);
     labelLayout->addWidget(openGlButton);
     // labelLayout->addWidget(printButton);
@@ -215,9 +216,8 @@ ImageView::ImageView(const QString &name, QWidget *parent)
     connect(zoomOutIcon, SIGNAL(clicked()), this, SLOT(zoomOut()));
     connect(m_saveImageButton, &QPushButton::clicked, this, &ImageView::onSaveImageButton);
     connect(m_tuneSlider, &QSlider::valueChanged, this, &ImageView::onTuneSliderValueChanged);
+    connect(m_saveImageButton, &QPushButton::clicked, this, &ImageView::saveChannelImage);
     // connect(printButton, SIGNAL(clicked()), this, SLOT(print()));
-
-
 
     setupMatrix();
 }

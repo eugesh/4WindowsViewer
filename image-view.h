@@ -50,6 +50,7 @@ signals:
     void scaleChanged(double value);
     void angleChanged(double value);
     void tuneSliderChanged(int value);
+    void saveChannelImage();
 
 public slots:
     void zoomIn(int level = 1);

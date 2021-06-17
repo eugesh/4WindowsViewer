@@ -179,6 +179,7 @@ void MainWindow::create4Windows()
         connect(m_vpImageView[i].get(), &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
         connect(m_vpImageView[i].get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
         connect(m_vpImageView[i].get(), &ImageView::tuneSliderChanged, this, &MainWindow::onTuneSliderChanged);
+        connect(m_vpImageView[i].get(), &ImageView::saveChannelImage, this, &MainWindow::onSaveChannel);
         connect(this, &MainWindow::scaleChanged, m_vpImageView[i].get(), &ImageView::zoomIn);
         connect(this, &MainWindow::angleChanged, m_vpImageView[i].get(), &ImageView::rotate);
     }
@@ -187,6 +188,34 @@ void MainWindow::create4Windows()
     m_vpSplitters.push_back(h2Splitter);
     m_vpSplitters.push_back(vSplitter);
 }
+
+/*void MainWindow::onTuneSliderChanged(int val)
+{
+    if (ImageView* view = qobject_cast<ImageView*> (sender())) {
+        foreach (auto *item, view->view()->scene()->items()) {
+            if (auto imageItem = dynamic_cast<ImageItem*> (item)) {
+                // imageItem->setFiltered(geom::getChannel(m_item->getImage(), m_colorSpace, i));
+                QImage img = imageItem->getImage();
+                if (DEBUG) img.save("tmp/img.png");
+                QImage imgBW(img.size(), QImage::Format_Indexed8);
+                static QVector<QRgb> sColorTable;
+                if (sColorTable.isEmpty()) {
+                    sColorTable.resize(256);
+                    for (int i = 0; i < 256; ++i) {
+                        sColorTable[i] = qRgb(i, i, i);
+                    }
+                }
+                imgBW.setColorTable(sColorTable);
+                imgBW = (applyBWThreshold(img, val));
+                cv::Mat applyBWThreshold(const cv::Mat &mat, int threshold, bool isInverse = false);
+                if (DEBUG) imgBW.save("tmp/BW.png");
+                imageItem->setFiltered(imgBW);
+                view->view()->scene()->update();
+            }
+        }
+        // m_vpImageItems[i]->setFiltered(geom::getChannel(m_item->getImage(), m_colorSpace, i));
+    }
+}*/
 
 void MainWindow::onTuneSliderChanged(int val)
 {
@@ -200,7 +229,6 @@ void MainWindow::onTuneSliderChanged(int val)
                 static QVector<QRgb> sColorTable;
                 if (sColorTable.isEmpty()) {
                     sColorTable.resize(256);
-
                     for (int i = 0; i < 256; ++i) {
                         sColorTable[i] = qRgb(i, i, i);
                     }
@@ -213,6 +241,21 @@ void MainWindow::onTuneSliderChanged(int val)
             }
         }
         // m_vpImageItems[i]->setFiltered(geom::getChannel(m_item->getImage(), m_colorSpace, i));
+    }
+}
+
+void MainWindow::onSaveChannel()
+{
+    if (ImageView* view = qobject_cast<ImageView*> (sender())) {
+        foreach (auto *item, view->view()->scene()->items()) {
+            if (auto imageItem = dynamic_cast<ImageItem*> (item)) {
+                QString fullFilePath =
+                        QFileDialog::getSaveFileName(nullptr, tr("Enter filename or select file"),
+                                                     tr("/home"), tr("Images (*.png *.bmp *.tif *.xpm *.jpg *.jpeg *.JPG)"));
+
+                imageItem->getFiltered().save(fullFilePath);
+            }
+        }
     }
 }
 
@@ -252,11 +295,12 @@ void MainWindow::openImages4Windows()
             m_vpImageItems.push_back(QSharedPointer<ImageItem>(new ImageItem()));
             m_vpImageItems[i]->setImage(m_item->getImage());
             QGraphicsScene *scene = new QGraphicsScene(this);
-            scene->addItem(m_vpImageItems[i].get());
             m_vpImageView[i]->view()->setScene(scene);
+            scene->addItem(m_vpImageItems[i].get());
             scene->update();
         }
         m_vpImageItems[i]->setImage(geom::getChannel(m_item->getImage(), m_colorSpace, i));
+        m_vpImageItems[i]->scene()->update();
     }
 }
 
@@ -290,7 +334,9 @@ void MainWindow::removeAdditionalWindows()
 int
 MainWindow::openImage()
 {
-    QString fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), m_lastPath, tr("Images (*.png *.bmp *.tif *.xpm *.jpg *.jpeg *.JPG)"));
+    QString fullFilePath =
+            QFileDialog::getOpenFileName(this, tr("Choose image file"), m_lastPath,
+                                         tr("Images (*.png *.bmp *.tif *.tiff *.gif *.xpm *.jpg *.jpeg *.JPG)"));
     // m_settings_dlg->ui->queue_lineEdit->setText(queuePath);
 
     if (fullFilePath.isEmpty())
@@ -462,8 +508,11 @@ void MainWindow::onActionProjectiveTransform()
                              m_RR->getPoints()[1].rx() - m_RR->getPoints()[0].rx());
 
 
-        QSize outSize(int(double(m_image.width()) / sin(alpha)), m_image.height());
-        m_vpImageItems.first()->setImage( calc_projection_4points(m_projMatrix, m_RR->getPoints(), outPoints, m_image, outSize) );
+        double sinAlpha = sin(alpha);
+
+        QSize outSize(int(double(m_image.width()) / sinAlpha), m_image.height());
+        m_vpImageItems.first()->setImage(
+                    calc_projection_4points(m_projMatrix, m_RR->getPoints(), outPoints, m_image, outSize));
         m_vpImageView.first()->view()->scene()->update();
     }
 }

@@ -71,6 +71,7 @@ private slots:
     void onActionSavePerspectiveProjectionMatrix();
     void onActionLoadPerspectiveProjectionMatrix();
     void onTuneSliderChanged(int val);
+    void onSaveChannel();
     //void onSimultaneousScrollCheck(int check);
 
 private:

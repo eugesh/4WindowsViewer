@@ -21,6 +21,20 @@
 // const std::vector<geom::PixelPoint()> &rubberRectPoints
 //constexpr int DEBUG = 1;
 
+QImage calc_projection_4points(cv::Mat &matrix,
+                               const std::vector<cv::Point2d> &points1,
+                               const std::vector<cv::Point2d> &points2,
+                               const cv::Mat &imageIn,
+                               cv::Size2d sizeOut);
+
+QImage calc_projection_4points(QMatrix3x3 &matrix,
+                               const std::vector<QPointF> &points1,
+                               const std::vector<QPointF> &points2,
+                               const QImage &imageIn, QSize sizeOut);
+
+QImage applyBWThreshold(const QImage &qimg, int threshold, bool isInverse = false);
+cv::Mat applyBWThreshold(const cv::Mat &mat, int threshold, bool isInverse = false);
+
 // @MOVE_TO_LIB, @MOVETOLIB
 //QMatrix3x3
 template <int N, int M, typename T, typename C>
@@ -83,23 +97,49 @@ QImage applyPerspectiveProjection(const QMatrix3x3 &matrix, const QImage &imageI
     return imageConverter(ocv_imageOut);
 }
 
-QImage calc_projection_4points(QMatrix3x3 &matrix, const std::vector<QPointF> &points1, const std::vector<QPointF> &points2, const QImage &imageIn, QSize sizeOut)
+QImage calc_projection_4points(QMatrix3x3 &matrix,
+                               const std::vector<QPointF> &points1,
+                               const std::vector<QPointF> &points2,
+                               const QImage &imageIn, QSize sizeOut)
 {
     // Convert points from Qt to OpenCV
     std::vector<cv::Point2d> ocv_pointsIn = pointsConverter(points1);
     std::vector<cv::Point2d> ocv_pointsOut = pointsConverter(points2);
+
     // Convert images
     cv::Mat ocv_imageIn = imageConverter(imageIn);
+
+    cv::Mat M;
+
+    QImage qimg = calc_projection_4points(M,
+                                          ocv_pointsIn,
+                                          ocv_pointsOut,
+                                          ocv_imageIn,
+                                          cv::Size2d(sizeOut.width(), sizeOut.height()));
+
+    matrix = MatToMatrix<3, 3, float, double>(M);
+
+    return qimg;
+}
+
+QImage calc_projection_4points(cv::Mat &matrix,
+                               const std::vector<cv::Point2d> &points1,
+                               const std::vector<cv::Point2d> &points2,
+                               const cv::Mat &imageIn,
+                               cv::Size2d sizeOut)
+{
     cv::Mat ocv_imageOut;
 
     /*CV_EXPORTS_W Mat findHomography( InputArray srcPoints, InputArray dstPoints,
                                      int method = 0, double ransacReprojThreshold = 3,
                                      OutputArray mask=noArray(), const int maxIters = 2000,
                                      const double confidence = 0.995);*/
-    cv::Mat M = cv::findHomography(ocv_pointsIn, ocv_pointsOut);
+    matrix = cv::findHomography(points1, points2);
+
+    if (DEBUG) std::cout << matrix << std::endl;
 
     // cv::warpPerspective(ocv_imageIn, ocv_imageOut, M, cv::Size2d(ocv_imageIn.rows, ocv_imageIn.cols));
-    cv::warpPerspective(ocv_imageIn, ocv_imageOut, M, cv::Size2d(sizeOut.width(), sizeOut.height()));
+    cv::warpPerspective(imageIn, ocv_imageOut, matrix, sizeOut);
 
     /*for (int i = 0; i < M.rows; ++i) {
         for (int j = 0; j < M.cols; ++j) {
@@ -108,16 +148,21 @@ QImage calc_projection_4points(QMatrix3x3 &matrix, const std::vector<QPointF> &p
         }
         if (DEBUG) std::cout << '\n';
     }*/
-    matrix = MatToMatrix<3, 3, float, double>(M);
 
     // Convert images back to Qt
 
     return imageConverter(ocv_imageOut);
 }
 
-QImage applyBWThreshold(const QImage &qimg, int threshold, bool isInverse = false)
+QImage applyBWThreshold(const QImage &qimg, int threshold, bool isInverse)
 {
     cv::Mat mat = imageConverter(qimg);
+
+    return imageConverter(applyBWThreshold(mat, threshold, isInverse));
+}
+
+cv::Mat applyBWThreshold(const cv::Mat &mat, int threshold, bool isInverse)
+{
     cv::Mat outMat;
 
     // CV_EXPORTS_W double threshold( InputArray src, OutputArray dst,
@@ -128,7 +173,7 @@ QImage applyBWThreshold(const QImage &qimg, int threshold, bool isInverse = fals
     if (DEBUG) cv::imwrite("tmp/outMat_threshold.png", outMat);
     // std::cout << outMat << std::endl;
 
-    return imageConverter(outMat);
+    return outMat;
 }
 
 #endif // OPENCV_PROCESSOR_H
