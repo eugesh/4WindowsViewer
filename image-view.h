@@ -73,7 +73,7 @@ private:
     QToolButton *dragModeButton;
     QToolButton *openGlButton;
     QToolButton *antialiasButton;
-    QToolButton *printButton;
+    // QToolButton *printButton;
     QToolButton *resetButton;
     QSlider *zoomSlider;
     QSlider *rotateSlider;

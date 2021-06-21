@@ -207,7 +207,7 @@ ImageView::ImageView(const QString &name, QWidget *parent)
     connect(rotateRightIcon, SIGNAL(clicked()), this, SLOT(rotateRight()));
     connect(zoomInIcon, SIGNAL(clicked()), this, SLOT(zoomIn()));
     connect(zoomOutIcon, SIGNAL(clicked()), this, SLOT(zoomOut()));
-    connect(printButton, SIGNAL(clicked()), this, SLOT(print()));
+    // connect(printButton, SIGNAL(clicked()), this, SLOT(print()));
 
     setupMatrix();
 }
