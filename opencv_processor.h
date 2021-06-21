@@ -134,7 +134,32 @@ QImage calc_projection_4points(cv::Mat &matrix,
                                      int method = 0, double ransacReprojThreshold = 3,
                                      OutputArray mask=noArray(), const int maxIters = 2000,
                                      const double confidence = 0.995);*/
-    matrix = cv::findHomography(points1, points2);
+    if (points1.size() != points2.size() or points1.empty() or points2.empty())
+        return {};
+
+    if (DEBUG) {
+        std::cout << "Points1: "/* << points1*/ << std::endl;
+        for (int i = 0; i < points1.size(); ++i)
+            std::cout << points1[i] << " ";
+    }
+    if (DEBUG) {
+        std::cout << "Points2: " /*<< points2 */<< std::endl;
+        for (int i = 0; i < points2.size(); ++i)
+            std::cout << points2[i].x << " " << points2[i].y << " ";
+    }
+
+    try {
+        matrix = cv::findHomography(points1, points2, 0);
+    } catch (const std::exception& ex) {
+        std::cout << "calc_projection_4points: findHomography: exception" << ex.what() << std::endl;
+        return {};
+    } catch (const std::string& ex) {
+        std::cout << "calc_projection_4points: findHomography: exception: " << ex << std::endl;
+        return {};
+    } catch (...) {
+        std::cout << "calc_projection_4points: findHomography: exception" << std::endl;
+        return {};
+    }
 
     if (DEBUG) std::cout << matrix << std::endl;
 

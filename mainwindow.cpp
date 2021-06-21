@@ -511,8 +511,12 @@ void MainWindow::onActionProjectiveTransform()
         double sinAlpha = sin(alpha);
 
         QSize outSize(int(double(m_image.width()) / sinAlpha), m_image.height());
-        m_vpImageItems.first()->setImage(
-                    calc_projection_4points(m_projMatrix, m_RR->getPoints(), outPoints, m_image, outSize));
+        QImage img = calc_projection_4points(m_projMatrix, m_RR->getPoints(), outPoints, m_image, outSize);
+        if (img.isNull()) {
+            qCritical() << "calc_projection_4points returned empty image!";
+            return;
+        }
+        m_vpImageItems.first()->setImage(img);
         m_vpImageView.first()->view()->scene()->update();
     }
 }
