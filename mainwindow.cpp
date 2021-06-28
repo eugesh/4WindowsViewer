@@ -255,7 +255,7 @@ void MainWindow::removeAdditionalWindows()
 int
 MainWindow::openImage()
 {
-    QString fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), m_lastPath, tr("Images (*.png *.bmp *.tif *.xpm *.jpg *.jpeg *.JPG)"));
+    QString fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), m_lastPath, tr("Images (*.png *.bmp *.tif *.tiff *.xpm *.jpg *.jpeg *.JPG)"));
     // m_settings_dlg->ui->queue_lineEdit->setText(queuePath);
 
     if (fullFilePath.isEmpty())
