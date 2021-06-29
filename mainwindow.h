@@ -38,6 +38,7 @@ public:
     ~MainWindow() override;
 
 private:
+    void onApplyCalibration(QSize outSize);
     void applyProjectiveTransform(QSize outSize);
     void create4Windows();
     void create2Windows();
@@ -66,10 +67,12 @@ private slots:
     void onActionHSI();
     void onAction4PointsRubberRect();
     void onAction4PointsWithLines();
+    void onActionCalibrate();
     void onActionProjectiveTransform();
     void onActionPixelRuler();
     void onActionSavePerspectiveProjectionMatrix();
     void onActionLoadPerspectiveProjectionMatrix();
+    void onActionLoadCalibrationMatrix();
     //void onSimultaneousScrollCheck(int check);
 
 private:
@@ -81,6 +84,8 @@ private:
     QString         m_img_path;
     QString         m_saveMatrixPath = "./projMatrix.txt";
     QMatrix3x3      m_projMatrix;
+    QMatrix3x3      m_calibMatrix;
+    std::vector<double> m_distortionCoeffs;
     QSharedPointer<ImageItem> m_item;
     // 3 Additional image viewers. Indexed clockwise
     // main window 0

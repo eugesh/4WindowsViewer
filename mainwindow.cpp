@@ -59,8 +59,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->action4PointsRubberRect, &QAction::triggered, this, &MainWindow::onAction4PointsRubberRect);
     connect(ui->action4PointsWithLines, &QAction::triggered, this, &MainWindow::onAction4PointsWithLines);
     connect(ui->actionProjectiveTransform, &QAction::triggered, this, &MainWindow::onActionProjectiveTransform);
+    connect(ui->actionCalibrate, &QAction::triggered, this, &MainWindow::onActionCalibrate);
     connect(ui->actionLoadPerspectiveProjectionMatrix, &QAction::triggered,
             this, &MainWindow::onActionLoadPerspectiveProjectionMatrix);
+    connect(ui->actionLoadCalibrationData, &QAction::triggered,
+            this, &MainWindow::onActionLoadCalibrationMatrix);
     connect(ui->actionPixelRuler, &QAction::triggered, this, &MainWindow::onActionPixelRuler);
 }
 
@@ -355,9 +358,47 @@ void MainWindow::onActionSavePerspectiveProjectionMatrix()
     saveStream << m_vpImageItems.first()->getImage().height();
 }
 
+void MainWindow::onActionLoadCalibrationMatrix()
+{
+    m_saveMatrixPath = QFileDialog::getOpenFileName(nullptr, tr("Choose matrix file"), m_saveMatrixPath, tr("*"));
+
+    QFile qFile(m_saveMatrixPath);
+    if (!qFile.open(QIODevice::Text | QIODevice::ReadOnly)) {
+            qCritical() << tr("Perspective transformation file %1 wasn't opened").arg(m_saveMatrixPath);
+    }
+
+    QTextStream saveStream(&qFile);
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            saveStream >> m_calibMatrix(i, j);
+        }
+    }
+
+    std::cout << "m_calibMatrix: ";
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            std::cout << m_calibMatrix(i, j) << " ";
+        }
+    }
+
+    double coeff;
+    for (int i = 0; i < 5; ++i) {
+        saveStream >> coeff;
+        m_distortionCoeffs.push_back(coeff);
+    }
+
+    std::cout << "m_distortionCoeffs: ";
+    for (size_t i = 0; i < 5; ++i) {
+        std::cout << m_distortionCoeffs[i] << " ";
+    }
+
+    onApplyCalibration(m_image.size());
+}
+
 void MainWindow::onActionLoadPerspectiveProjectionMatrix()
 {
-    m_saveMatrixPath = QFileDialog::getOpenFileName(this, tr("Choose matrix file"), m_saveMatrixPath, tr("*"));
+    m_saveMatrixPath = QFileDialog::getOpenFileName(nullptr, tr("Choose matrix file"), m_saveMatrixPath, tr("*"));
 
     QFile qFile(m_saveMatrixPath);
     if (!qFile.open(QIODevice::Text | QIODevice::ReadOnly)) {
@@ -381,10 +422,19 @@ void MainWindow::onActionLoadPerspectiveProjectionMatrix()
     applyProjectiveTransform(outSize);
 }
 
+void MainWindow::onApplyCalibration(QSize outSize)
+{
+    if (!m_vpImageItems.isEmpty() && !m_vpImageItems.first().isNull()) {
+        QImage img = applyCalibration(m_calibMatrix, m_distortionCoeffs, m_image, m_image.size());
+        m_item->setImage(img);
+        m_item->scene()->update();
+    }
+}
+
 void MainWindow::applyProjectiveTransform(QSize outSize)
 {
     if (!m_vpImageItems.isEmpty() && !m_vpImageItems.first().isNull()) {
-        m_vpImageItems.first()->setImage(applyPerspectiveProjection(m_projMatrix, m_image, outSize));
+        m_vpImageItems.first()->setImage(applyPerspectiveProjection(m_projMatrix, m_item->getImage(), outSize));
         m_vpImageItems.first()->scene()->update();
     }
 }
@@ -429,4 +479,9 @@ void MainWindow::onActionProjectiveTransform()
         m_vpImageItems.first()->setImage( calc_projection_4points(m_projMatrix, m_RR->getPoints(), outPoints, m_image, outSize) );
         m_vpImageView.first()->view()->scene()->update();
     }
+}
+
+void MainWindow::onActionCalibrate()
+{
+    onApplyCalibration(m_image.size());
 }

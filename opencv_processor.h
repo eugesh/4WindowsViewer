@@ -21,6 +21,9 @@
 // const std::vector<geom::PixelPoint()> &rubberRectPoints
 constexpr int DEBUG = 1;
 
+QImage applyCalibration(const QMatrix3x3 &matrix, const std::vector<double> distCoeffs, const QImage &imageIn, cv::Size2d sizeOut);
+cv::Mat applyCalibration(const cv::Mat &matrix, const std::vector<double> distCoeffs, const cv::Mat &matIn, QSize sizeOut);
+
 // @MOVE_TO_LIB, @MOVETOLIB
 //QMatrix3x3
 template <int N, int M, typename T, typename C>
@@ -33,7 +36,7 @@ QGenericMatrix<N, M, T> MatToMatrix(const cv::Mat &mat)
 
     for (int i = 0; i < mat.rows; ++i) {
         for (int j = 0; j < mat.cols; ++j) {
-            matrix(i, j) = mat.at<C>(j, i);
+            matrix(i, j) = float(mat.at<C>(j, i));
         }
     }
 
@@ -41,14 +44,14 @@ QGenericMatrix<N, M, T> MatToMatrix(const cv::Mat &mat)
 }
 
 // @MOVE_TO_LIB, @MOVETOLIB
-template <int N, int M, typename T>
+template <int N, int M, typename T, typename C>
 cv::Mat MatrixToMat(const QGenericMatrix<N, M, T> &matrix)
 {
     cv::Mat mat(M, N, CV_32FC1); // ToDo: make dependent from T
 
     for (int i = 0; i < M; ++i) {
         for (int j = 0; j < N; ++j) {
-            mat.at<T>(j, i) = matrix(i, j);
+            mat.at<C>(j, i) = double(matrix(i, j));
         }
     }
 
@@ -76,7 +79,7 @@ QImage applyPerspectiveProjection(const QMatrix3x3 &matrix, const QImage &imageI
     // Convert images
     cv::Mat ocv_imageIn = imageConverter(imageIn);
     cv::Mat ocv_imageOut;
-    cv::Mat M = MatrixToMat(matrix);
+    cv::Mat M = MatrixToMat<3, 3, float, double>(matrix);
 
     cv::warpPerspective(ocv_imageIn, ocv_imageOut, M, cv::Size2d(sizeOut.width(), sizeOut.height()));
 
@@ -113,6 +116,34 @@ QImage calc_projection_4points(QMatrix3x3 &matrix, const std::vector<QPointF> &p
     // Convert images back to Qt
 
     return imageConverter(ocv_imageOut);
+}
+
+cv::Mat applyCalibration(const cv::Mat &matrix, const std::vector<double> distCoeffs, const cv::Mat &matIn, cv::Size2d sizeOut)
+{
+    cv::Mat matOut;
+
+    cv::imwrite("matIn.png", matIn);
+
+    std::cout << "Calibration matrix = " << matrix;
+    std::cout << "Distortion coefficients = ";
+    for (int i = 0; i < distCoeffs.size(); ++i)
+        std::cout << distCoeffs[i] << " ";
+
+    cv::undistort(matIn, matOut, matrix, distCoeffs);
+
+    cv::imwrite("matOut.png", matOut);
+
+    return matOut;
+}
+
+QImage applyCalibration(const QMatrix3x3 &matrix, const std::vector<double> distCoeffs, const QImage &imageIn, QSize sizeOut)
+{
+    cv::Mat mat = imageConverter(imageIn);
+    cv::Mat M = MatrixToMat<3, 3, float, double>(matrix);
+
+    cv::Mat matOut = applyCalibration(M, distCoeffs, mat, cv::Size2d(sizeOut.width(), sizeOut.height()));
+
+    return imageConverter(matOut);
 }
 
 #endif // OPENCV_PROCESSOR_H

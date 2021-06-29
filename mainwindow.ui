@@ -33,6 +33,7 @@
     <addaction name="actionSaveImage"/>
     <addaction name="actionSavePerspectiveProjectionMatrix"/>
     <addaction name="actionLoadPerspectiveProjectionMatrix"/>
+    <addaction name="actionLoadCalibrationData"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -42,6 +43,7 @@
     <addaction name="actionProjectiveTransform"/>
     <addaction name="action4PointsWithLines"/>
     <addaction name="actionPixelRuler"/>
+    <addaction name="actionCalibrate"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -210,6 +212,16 @@
   <action name="actionLoadPerspectiveProjectionMatrix">
    <property name="text">
     <string>Load perspective projection matrix</string>
+   </property>
+  </action>
+  <action name="actionLoadCalibrationData">
+   <property name="text">
+    <string>Load calibration data</string>
+   </property>
+  </action>
+  <action name="actionCalibrate">
+   <property name="text">
+    <string>Calibrate</string>
    </property>
   </action>
  </widget>
