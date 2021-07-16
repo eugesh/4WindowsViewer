@@ -35,13 +35,12 @@ ImageItem::shape() const
 
 void
 ImageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    std::cout << "paint"<<std::endl;
     Q_UNUSED(widget)
     Q_UNUSED(option)
     // painter->drawImage(QPoint(0,0), m_image_part2draw);
     if (! m_inUpdateProcess) {
         m_inUpdateProcess = true;
-        Qt::ImageConversionFlag flag = Qt::ImageConversionFlag::AutoColor;
+        // Qt::ImageConversionFlag flag = Qt::ImageConversionFlag::AutoColor;
         /*if (m_image_part2draw.format() == QImage::Format_Indexed8) {
             flag = Qt::ImageConversionFlag::MonoOnly;
             m_image_part2draw.save("tmp/outGray.png");
@@ -49,32 +48,34 @@ ImageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
         // QImage img = m_image_part2draw.convertToFormat(QImage::Format_ARGB32, Qt::ImageConversionFlag::ColorOnly);
         // if (DEBUG) img.save("tmp/befor_draw.png");
         // painter->drawImage(cur_pose, img, boundingRect(), flag);
-        if (!QFileInfo::exists(QString("tmp/%1").arg(intptr_t(this)))) {
+        if (DEBUG) if (!QFileInfo::exists(QString("tmp/%1").arg(intptr_t(this)))) {
             //qDebug() << QString("tmp/%1").arg(intptr_t(this));
             //QDir dir(QString("tmp/%1").arg(intptr_t(this)));
             //dir.mkdir(QString("tmp/%1").arg(intptr_t(this)));
             QDir().mkdir(QString("tmp/%1").arg(intptr_t(this)));
         }
-        m_pmap = QPixmap::fromImage(m_image_part2draw);
+        /*m_pmap = QPixmap::fromImage(m_image_part2draw);
         // if (DEBUG) m_image_part2draw.save("tmp/befor_draw.png");
         if (DEBUG) m_image_part2draw.save(QString("tmp/%1/%2").arg(intptr_t(this)).arg("befor_draw.png"));
         //  if (DEBUG) m_pmap.save("tmp/befor_draw.bmp");
         if (DEBUG) m_pmap.save(QString("tmp/%1/%2").arg(intptr_t(this)).arg("befor_draw.bmp"));
-        painter->drawPixmap(cur_pose, m_pmap);
+        painter->drawPixmap(cur_pose, m_pmap); */
+        painter->drawImage(cur_pose, m_image_part2draw);
     }
     m_inUpdateProcess = false;
 }
 
 QImage ImageItem::setFiltered(const QImage &img)
 {
-    std::cout << "setFiltered: ";
-    std::cout << "old format: " << m_image_part2draw.format();
-    std::cout << "new format: " << img.format();
+    if (DEBUG) std::cout << "setFiltered: ";
+    if (DEBUG) std::cout << "old format: " << m_image_part2draw.format();
+    if (DEBUG) std::cout << "new format: " << img.format();
     if (DEBUG) img.save("tmp/img_setFiltered.png");
     m_image_part2draw = img;
-    std::cout << "became format: " << m_image_part2draw.format();
+    if (DEBUG) std::cout << "became format: " << m_image_part2draw.format();
     if (DEBUG) m_image_part2draw.save("tmp/m_image_part2draw_setFiltered.png");
     scene()->update();
+
     return m_image_part2draw;
 }
 

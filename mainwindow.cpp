@@ -349,7 +349,7 @@ MainWindow::openImage()
 
     m_image = QImage(fullFilePath);
 
-    std::cout << "input image.format(): " << m_image.format() << std::endl;
+    if (DEBUG) std::cout << "input image.format(): " << m_image.format() << std::endl;
 
     m_item->setImage(m_image);
 

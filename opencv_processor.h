@@ -21,11 +21,11 @@
 // const std::vector<geom::PixelPoint()> &rubberRectPoints
 //constexpr int DEBUG = 1;
 
-QImage calc_projection_4points(cv::Mat &matrix,
-                               const std::vector<cv::Point2d> &points1,
-                               const std::vector<cv::Point2d> &points2,
-                               const cv::Mat &imageIn,
-                               cv::Size2d sizeOut);
+QImage calc_projection_4points_ocv(cv::Mat &matrix,
+                                   const std::vector<cv::Point2d> &points1,
+                                   const std::vector<cv::Point2d> &points2,
+                                   const cv::Mat &imageIn,
+                                   cv::Size2d sizeOut);
 
 QImage calc_projection_4points(QMatrix3x3 &matrix,
                                const std::vector<QPointF> &points1,
@@ -111,22 +111,22 @@ QImage calc_projection_4points(QMatrix3x3 &matrix,
 
     cv::Mat M;
 
-    QImage qimg = calc_projection_4points(M,
-                                          ocv_pointsIn,
-                                          ocv_pointsOut,
-                                          ocv_imageIn,
-                                          cv::Size2d(sizeOut.width(), sizeOut.height()));
+    QImage qimg = calc_projection_4points_ocv(M,
+                                              ocv_pointsIn,
+                                              ocv_pointsOut,
+                                              ocv_imageIn,
+                                              cv::Size2d(sizeOut.width(), sizeOut.height()));
 
     matrix = MatToMatrix<3, 3, float, double>(M);
 
     return qimg;
 }
 
-QImage calc_projection_4points(cv::Mat &matrix,
-                               const std::vector<cv::Point2d> &points1,
-                               const std::vector<cv::Point2d> &points2,
-                               const cv::Mat &imageIn,
-                               cv::Size2d sizeOut)
+QImage calc_projection_4points_ocv(cv::Mat &matrix,
+                                   const std::vector<cv::Point2d> &points1,
+                                   const std::vector<cv::Point2d> &points2,
+                                   const cv::Mat &imageIn,
+                                   cv::Size2d sizeOut)
 {
     cv::Mat ocv_imageOut;
 
@@ -134,7 +134,8 @@ QImage calc_projection_4points(cv::Mat &matrix,
                                      int method = 0, double ransacReprojThreshold = 3,
                                      OutputArray mask=noArray(), const int maxIters = 2000,
                                      const double confidence = 0.995);*/
-    if (points1.size() != points2.size() or points1.empty() or points2.empty())
+    if (points1.size() != points2.size() or points1.empty() or points2.empty()
+        or points1.size() < 4 or points2.size() < 4)
         return {};
 
     if (DEBUG) {
@@ -143,10 +144,13 @@ QImage calc_projection_4points(cv::Mat &matrix,
             std::cout << points1[i] << " ";
     }
     if (DEBUG) {
-        std::cout << "Points2: " /*<< points2 */<< std::endl;
+        std::cout << std::endl << "Points2: " /*<< points2 */<< std::endl;
+        std::cout << "Size = " << points2.size() << std::endl;
         for (int i = 0; i < points2.size(); ++i)
-            std::cout << points2[i].x << " " << points2[i].y << " ";
+            std::cout << points2.at(i).x << " " << points2.at(i).y << " ";
     }
+
+    // cv::imwrite("imageIn1.png", imageIn);
 
     try {
         matrix = cv::findHomography(points1, points2, 0);
@@ -161,11 +165,23 @@ QImage calc_projection_4points(cv::Mat &matrix,
         return {};
     }
 
-    if (DEBUG) std::cout << matrix << std::endl;
+    if (DEBUG) std::cout << std::endl << "matrix: " << matrix << std::endl;
+    if (DEBUG) std::cout << std::endl << "sizeOut: " << sizeOut << std::endl;
 
     // cv::warpPerspective(ocv_imageIn, ocv_imageOut, M, cv::Size2d(ocv_imageIn.rows, ocv_imageIn.cols));
-    cv::warpPerspective(imageIn, ocv_imageOut, matrix, sizeOut);
-
+    if (DEBUG) cv::imwrite("imageIn2.png", imageIn);
+    try {
+        cv::warpPerspective(imageIn, ocv_imageOut, matrix, sizeOut);
+    } catch (const std::exception& ex) {
+        std::cout << "calc_projection_4points: warpPerspective: exception" << ex.what() << std::endl;
+        return {};
+    } catch (const std::string& ex) {
+        std::cout << "calc_projection_4points: warpPerspective: exception: " << ex << std::endl;
+        return {};
+    } catch (...) {
+        std::cout << "calc_projection_4points: warpPerspective: exception" << std::endl;
+        return {};
+    }
     /*for (int i = 0; i < M.rows; ++i) {
         for (int j = 0; j < M.cols; ++j) {
             matrix(i, j) = M.at<double>(j, i);
