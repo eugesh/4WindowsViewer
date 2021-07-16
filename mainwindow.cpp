@@ -5,6 +5,7 @@
 #include <QGraphicsItem>
 #include <QHBoxLayout>
 #include <QSignalMapper>
+#include <QSlider>
 #include <QSplitter>
 
 #include "mainwindow.h"
@@ -222,6 +223,7 @@ void MainWindow::onTuneSliderChanged(int val)
     if (ImageView* view = qobject_cast<ImageView*> (sender())) {
         foreach (auto *item, view->view()->scene()->items()) {
             if (auto imageItem = dynamic_cast<ImageItem*> (item)) {
+                view->tuneSlider()->setToolTip(QString("%1").arg(view->tuneSlider()->value()));
                 // imageItem->setFiltered(geom::getChannel(m_item->getImage(), m_colorSpace, i));
                 QImage img = imageItem->getImage();
                 if (DEBUG) img.save("tmp/img.png");
@@ -506,7 +508,6 @@ void MainWindow::onActionProjectiveTransform()
         // width
         double alpha = atan2(m_RR->getPoints()[2].ry() - m_RR->getPoints()[1].ry(),
                              m_RR->getPoints()[1].rx() - m_RR->getPoints()[0].rx());
-
 
         double sinAlpha = sin(alpha);
 

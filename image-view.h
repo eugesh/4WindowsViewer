@@ -45,6 +45,7 @@ public:
     int channelNumber() { return m_channelNumber; }
     void changeColorSpace(ColorSpace cs) { m_colorSpace = cs; }
     void changeChannelNumber(int cn);
+    QSlider* tuneSlider() { return m_tuneSlider; }
 
 signals:
     void scaleChanged(double value);
