@@ -42,6 +42,7 @@
     <addaction name="actionProjectiveTransform"/>
     <addaction name="action4PointsWithLines"/>
     <addaction name="actionPixelRuler"/>
+    <addaction name="actionPointInput"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -210,6 +211,11 @@
   <action name="actionLoadPerspectiveProjectionMatrix">
    <property name="text">
     <string>Load perspective projection matrix</string>
+   </property>
+  </action>
+  <action name="actionPointInput">
+   <property name="text">
+    <string>Point Input</string>
    </property>
   </action>
  </widget>

@@ -6,6 +6,7 @@
 #include <QGraphicsScene>
 #include "image-item.h"
 #include "image-processing-common.h"
+#include "pointitem.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -40,7 +41,14 @@ public:
 private:
     void applyProjectiveTransform(QSize outSize);
     void create4Windows();
+    void create3Windows();
+    // 2 Windows: projective transform tool
     void create2Windows();
+    // 3 Windows: Corresponding points input: left, right, match
+    void openImages3Windows();
+    void show3Windows();
+    void hide3Windows();
+    // 4 Windows: Color image + H,S,V or R,G,B
     void openImages4Windows();
     void show4Windows();
     void hide4Windows();
@@ -60,6 +68,7 @@ private slots:
     void onAddHSplitter();
     void onAddDockWidget();
     void on4WindowsCheck(int check);
+    void on3WindowsCheck(int check);
     void on2WindowsCheck(int check);
     void onActionRGB();
     void onActionHSV();
@@ -72,6 +81,9 @@ private slots:
     void onActionLoadPerspectiveProjectionMatrix();
     void onTuneSliderChanged(int val);
     void onSaveChannel();
+    // Input corresponding points by hand
+    void onActionPointInput();
+    void onPointAdded(const QPoint&);
     //void onSimultaneousScrollCheck(int check);
 
 private:
@@ -95,9 +107,12 @@ private:
     bool m_isSimultaneousScroll = true;
     ColorSpace m_colorSpace = RGB;
     QString m_lastPath = "/home";
-    // Projective trabsform tool
+    // Projective transform tool
     QSharedPointer<RubberRect> m_RR;
     QSharedPointer<PixelRuler> m_PixelRuler;
+
+    // Corresponding points
+    QVector<quint32> m_pointsIds;
 };
 
 #endif // MAINWINDOW_H

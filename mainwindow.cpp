@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionLoadPerspectiveProjectionMatrix, &QAction::triggered,
             this, &MainWindow::onActionLoadPerspectiveProjectionMatrix);
     connect(ui->actionPixelRuler, &QAction::triggered, this, &MainWindow::onActionPixelRuler);
+    connect(ui->actionPointInput, &QAction::triggered, this, &MainWindow::onActionPointInput);
 }
 
 MainWindow::~MainWindow()
@@ -84,6 +85,23 @@ void MainWindow::on4WindowsCheck(int check)
             openImages4Windows();
     } else {
         hide4Windows();
+    }
+}
+
+void MainWindow::on3WindowsCheck(int check)
+{
+    if (check) {
+        removeAdditionalWindows();
+        ui->action2Windows->setChecked(false);
+        ui->action4Windows->setChecked(false);
+        if (m_vpSplitters.empty())
+            create3Windows();
+        else
+            show3Windows();
+        if (m_vpImageItems.empty())
+            openImages3Windows();
+    } else {
+        hide3Windows();
     }
 }
 
@@ -142,6 +160,45 @@ void MainWindow::changeColorSpace(ColorSpace s)
         m_vpImageView[i]->changeColorSpace(m_colorSpace);
         m_vpImageView[i]->changeChannelNumber(i);
     }
+}
+
+void MainWindow::create3Windows()
+{
+    QSharedPointer<QSplitter> h1Splitter = QSharedPointer<QSplitter>(new QSplitter(this));
+
+    QSharedPointer<QSplitter> vSplitter = QSharedPointer<QSplitter> (new QSplitter(this));
+    vSplitter->setOrientation(Qt::Vertical);
+
+    vSplitter->addWidget(m_view.get());
+    vSplitter->addWidget(h1Splitter.get());
+
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Top right view", this)));
+    QGraphicsScene *scene = new QGraphicsScene(this);
+    m_vpImageView.last()->view()->setScene(scene);
+    h1Splitter->addWidget(m_vpImageView.last().get());
+
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom left view", this)));
+    QGraphicsScene *scene2 = new QGraphicsScene(this);
+    m_vpImageView.last()->view()->setScene(scene2);
+    h1Splitter->addWidget(m_vpImageView.last().get());
+
+    QHBoxLayout *layout = new QHBoxLayout;
+    layout->addWidget(vSplitter.get());
+    setLayout(layout);
+    setCentralWidget(vSplitter.get());
+
+    for (int i = 0; i < m_vpImageView.size(); ++i) {
+        connect(m_vpImageView[i].get(), &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
+        connect(m_vpImageView[i].get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
+        connect(m_vpImageView[i].get(), &ImageView::tuneSliderChanged, this, &MainWindow::onTuneSliderChanged);
+        connect(m_vpImageView[i].get(), &ImageView::saveChannelImage, this, &MainWindow::onSaveChannel);
+        connect(m_vpImageView[i].get(), &ImageView::pointAdded, this, &MainWindow::onPointAdded);
+        connect(this, &MainWindow::scaleChanged, m_vpImageView[i].get(), &ImageView::zoomIn);
+        connect(this, &MainWindow::angleChanged, m_vpImageView[i].get(), &ImageView::rotate);
+    }
+
+    m_vpSplitters.push_back(vSplitter);
+    m_vpSplitters.push_back(h1Splitter);
 }
 
 void MainWindow::create4Windows()
@@ -261,6 +318,49 @@ void MainWindow::onSaveChannel()
     }
 }
 
+void MainWindow::onPointAdded(const QPoint &point)
+{
+    if (m_vpImageView.size() != 2)
+        return;
+
+    quint32 newId;
+    if (m_pointsIds.empty())
+        newId = 0;
+    else
+        newId = m_pointsIds.last() + 1;
+
+    for (int i = 0; i < m_vpImageView.size(); ++i) {
+        PointItem *pi = new PointItem("ControlPoint", newId, this, m_vpImageItems[i].get());
+        pi->setPos(point);
+        pi->setZValue(0);
+        m_vpImageView[i].get();
+        m_vpImageView[i]->view()->scene()->addItem(pi);
+    }
+
+    auto item_list1 = m_vpImageView[0]->view()->scene()->items();
+    auto item_list2 = m_vpImageView[1]->view()->scene()->items();
+
+    foreach (auto item1, item_list1) {
+        PointItem *pi1 = nullptr;
+        pi1 = qgraphicsitem_cast<PointItem*>(item1);
+        if (pi1) {
+            foreach (auto item2, item_list2) {
+                PointItem *pi2 = nullptr;
+                pi2 = qgraphicsitem_cast<PointItem*>(item2);
+                if (pi2 && pi1->id() == pi2->id()) {
+                    connect(pi1, &PointItem::textChanged, pi2, &PointItem::setText);
+                    connect(pi2, &PointItem::textChanged, pi1, &PointItem::setText);
+                }
+            }
+        }
+    }
+}
+
+void MainWindow::onActionPointInput()
+{
+    on3WindowsCheck(1);
+}
+
 void MainWindow::create2Windows()
 {
     QSharedPointer<QSplitter> hSplitter = QSharedPointer<QSplitter>(new QSplitter(this));
@@ -286,6 +386,21 @@ void MainWindow::create2Windows()
     }
 
     m_vpSplitters.push_back(hSplitter);
+}
+
+void MainWindow::openImages3Windows()
+{
+    openImages4Windows();
+}
+
+void MainWindow::show3Windows()
+{
+
+}
+
+void MainWindow::hide3Windows()
+{
+
 }
 
 void MainWindow::openImages4Windows()

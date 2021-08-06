@@ -52,6 +52,7 @@ signals:
     void angleChanged(double value);
     void tuneSliderChanged(int value);
     void saveChannelImage();
+    void pointAdded(const QPoint&);
 
 public slots:
     void zoomIn(int level = 1);
@@ -70,6 +71,7 @@ private slots:
     void rotateRight();
     void onSaveImageButton();
     void onTuneSliderValueChanged(int value);
+    void showContextMenu(const QPoint&);
 
 private:
     GraphicsView *graphicsView;

@@ -76,6 +76,7 @@ ImageView::ImageView(const QString &name, QWidget *parent)
     : QFrame(parent)
 {
     setFrameStyle(Sunken | StyledPanel);
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
     graphicsView = new GraphicsView(this);
     graphicsView->setRenderHint(QPainter::Antialiasing, false);
     graphicsView->setDragMode(QGraphicsView::RubberBandDrag);
@@ -219,6 +220,9 @@ ImageView::ImageView(const QString &name, QWidget *parent)
     connect(m_saveImageButton, &QPushButton::clicked, this, &ImageView::saveChannelImage);
     // connect(printButton, SIGNAL(clicked()), this, SLOT(print()));
 
+    connect(this, &QWidget::customContextMenuRequested,
+            this, &ImageView::showContextMenu);
+
     setupMatrix();
 }
 
@@ -327,4 +331,19 @@ void ImageView::changeChannelNumber(int cn)
 {
     m_channelNumber = cn;
     label->setText(textFromColorName(ColorName(cn + m_colorSpace * 3 + red)));
+}
+
+void ImageView::showContextMenu(const QPoint& pos)
+{
+    QMenu contextMenu(tr("Context menu"), this);
+
+    QAction action1("Add control point", this);
+
+    connect(&action1, &QAction::triggered, [&]() {
+        emit pointAdded(pos);
+    });
+
+    contextMenu.addAction(&action1);
+
+    contextMenu.exec(mapToGlobal(pos));
 }
