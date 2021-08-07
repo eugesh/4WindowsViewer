@@ -54,13 +54,13 @@ PointItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 void
 PointItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    coord = event->pos();
+    m_coord = event->pos();
     parentItem()->scene()->update();
 }
 
 void PointItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    coord = event->pos();
+    m_coord = event->pos();
 }
 
 void PointItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -81,10 +81,10 @@ void PointItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     painter->setFont(QFont("Times",25,1));
     painter->drawText(rect,QTextOption::LeftTab,myText);
     QVector<QPointF> pointPairs;
-    pointPairs << QPointF (coord.x(), coord.y() + 25) << QPointF (coord.x(), coord.y() - 25);
+    pointPairs << QPointF (m_coord.x(), m_coord.y() + 25) << QPointF (m_coord.x(), m_coord.y() - 25);
     painter->drawLines(pointPairs);
     pointPairs.clear ();
-    pointPairs << QPointF (coord.x() + 25, coord.y()) << QPointF (coord.x() - 25, coord.y());
+    pointPairs << QPointF (m_coord.x() + 25, m_coord.y()) << QPointF (m_coord.x() - 25, m_coord.y());
     painter->drawLines(pointPairs);
     //! Cохранение координат
     //coord = this->pos();
@@ -106,7 +106,7 @@ QRectF PointItem::outlineRect() const
     const int Padding = 50;
     QFontMetricsF metrics = qApp->fontMetrics();
     // QRectF rect = metrics.boundingRect("+");
-    QRectF rect = QRectF(coord - QPoint(50, 50), coord + QPoint(50, 50));
+    QRectF rect = QRectF(m_coord - QPoint(50, 50), m_coord + QPoint(50, 50));
     rect.adjust(-Padding, -Padding, +Padding, +Padding);
     // rect.translate(-3.2, 4.65);
     return rect;

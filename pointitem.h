@@ -13,7 +13,8 @@ public:
     enum { Type = UserType + 1 };
     PointItem(const QString &name="ControlPoint", quint32 id = 0, QObject *parent_object = nullptr, QGraphicsItem *parent = nullptr);
 
-    QString text( );
+    QPointF coord() { return mapToItem(parentItem(), m_coord); }
+    QString text();
     quint32 id() { return m_id; }
     int type() const override { return Type; } // Enable the use of qgraphicsitem_cast with this item.
 
@@ -34,7 +35,7 @@ public slots:
 private:
     QRectF outlineRect() const;
     quint32 m_id;
-    QPointF coord;
+    QPointF m_coord;
     QString myText;
     QColor myTextColor;
     QColor myBackgroundColor;
