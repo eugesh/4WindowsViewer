@@ -55,6 +55,8 @@ private:
     void removeAdditionalWindows();
     // void changeColorSpace(QColor::Spec s);
     void changeColorSpace(ColorSpace s);
+    void createControlPtsToolBar();
+    bool saveControlPoints(const QString &fp);
 
 signals:
     void scaleChanged(double);
@@ -113,6 +115,7 @@ private:
 
     // Corresponding points
     QVector<quint32> m_pointsIds;
+    QToolBar *m_controlPtToolBar;
 };
 
 #endif // MAINWINDOW_H

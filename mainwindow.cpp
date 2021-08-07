@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QGraphicsItem>
 #include <QHBoxLayout>
+#include <QPushButton>
 #include <QSignalMapper>
 #include <QSlider>
 #include <QSplitter>
@@ -35,6 +36,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_view->view()->setScene(m_scene.get());
 
     setCentralWidget(m_view.get());
+
+    // ToolBars
+    createControlPtsToolBar();
 
     connect(ui->actionOpen_image, &QAction::triggered, this, &MainWindow::openImage);
     connect(ui->actionSavePerspectiveProjectionMatrix, &QAction::triggered,
@@ -70,6 +74,90 @@ MainWindow::~MainWindow()
 {
     removeAdditionalWindows();
     delete ui;
+}
+
+void MainWindow::createControlPtsToolBar()
+{
+    m_controlPtToolBar = new QToolBar("Control Points", this);
+
+    QPushButton *loadLeftBtn = new QPushButton("Left");
+    QPushButton *loadRightBtn = new QPushButton("Right");
+
+    m_controlPtToolBar->addWidget(loadLeftBtn);
+    m_controlPtToolBar->addWidget(loadRightBtn);
+
+    connect(loadLeftBtn, &QAbstractButton::pressed, [this]() {
+        if (m_vpImageItems.size() != 2)
+            return ;
+
+        static QString fullFilePath = "/home";
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+                      tr("Images (*.png *.bmp *.tif *.tiff *.gif *.xpm *.jpg *.jpeg *.JPG)"));
+
+        m_vpImageItems[0]->setImage(QImage(fullFilePath));
+
+        m_vpImageView[0]->view()->scene()->update();
+    });
+
+    connect(loadRightBtn, &QAbstractButton::pressed, [this]() {
+        if (m_vpImageItems.size() != 2)
+            return ;
+
+        static QString fullFilePath = "/home";
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+                      tr("Images (*.png *.bmp *.tif *.tiff *.gif *.xpm *.jpg *.jpeg *.JPG)"));
+
+        m_vpImageItems[1]->setImage(QImage(fullFilePath));
+
+        m_vpImageView[1]->view()->scene()->update();
+    });
+
+    QPushButton *saveBtn = new QPushButton("Save");
+    m_controlPtToolBar->addWidget(saveBtn);
+    connect(saveBtn, &QAbstractButton::pressed, [this]() {
+        static QString fullFilePath = tr("/home");
+        fullFilePath = QFileDialog::getSaveFileName(nullptr, tr("Enter filename or select file"),
+                                                    fullFilePath, tr("CSV (*.csv)"));
+        saveControlPoints(fullFilePath);
+    });
+
+    addToolBar(Qt::TopToolBarArea, m_controlPtToolBar);
+    m_controlPtToolBar->hide();
+}
+
+bool MainWindow::saveControlPoints(const QString &fp)
+{
+    if (m_vpImageView.size() != 2) {
+        return false;
+    }
+
+    QFile qFile(fp);
+    if (!qFile.open(QIODevice::Text | QIODevice::WriteOnly)) {
+            qCritical() << tr("Controlo points file %1 wasn't opened for write").arg(fp);
+    }
+
+    QTextStream saveStream(&qFile);
+
+    auto item_list1 = m_vpImageView[0]->view()->scene()->items();
+    auto item_list2 = m_vpImageView[1]->view()->scene()->items();
+
+    foreach (auto item1, item_list1) {
+        PointItem *pi1 = nullptr;
+        pi1 = qgraphicsitem_cast<PointItem*>(item1);
+        if (pi1) {
+            foreach (auto item2, item_list2) {
+                PointItem *pi2 = nullptr;
+                pi2 = qgraphicsitem_cast<PointItem*>(item2);
+                if (pi2 && pi1->id() == pi2->id()) {
+                    saveStream << pi1->text() << ";" // QString::number(pi1->id())
+                               << pi1->coord().x() << ";" << pi1->coord().y() << ";"
+                               << pi2->coord().x() << ";" << pi2->coord().y() << "\n";
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 void MainWindow::on4WindowsCheck(int check)
@@ -324,10 +412,12 @@ void MainWindow::onPointAdded(const QPoint &point)
         return;
 
     quint32 newId;
-    if (m_pointsIds.empty())
+    if (m_pointsIds.empty()) {
         newId = 0;
-    else
+    } else {
         newId = m_pointsIds.last() + 1;
+    }
+    m_pointsIds.push_back(newId);
 
     for (int i = 0; i < m_vpImageView.size(); ++i) {
         PointItem *pi = new PointItem("ControlPoint", newId, this, m_vpImageItems[i].get());
@@ -358,6 +448,7 @@ void MainWindow::onPointAdded(const QPoint &point)
 
 void MainWindow::onActionPointInput()
 {
+    m_controlPtToolBar->show();
     on3WindowsCheck(1);
 }
 
