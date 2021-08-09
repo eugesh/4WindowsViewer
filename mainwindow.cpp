@@ -18,6 +18,7 @@
 #include "RubberRect.h"
 #include "pixelruler.h"
 
+static const bool DEBUG1 = true;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -143,6 +144,11 @@ void MainWindow::createControlPtsToolBar()
 
         m_cameraMtx[0] = readMtxFileStorage(fullFilePath, "CameraMatrix");
         m_distCoeffs[0] = readMtxFileStorage(fullFilePath, "DistCoeffs");
+
+        if (DEBUG1) {
+            std::cout << "m_cameraMtx[0] = " << m_cameraMtx[0] << std::endl;
+            std::cout << "m_distCoeffs[0] = " << m_distCoeffs[0] << std::endl;
+        }
     });
 
     connect(loadRightCamMtxBtn, &QAbstractButton::pressed, [this]() {
@@ -154,6 +160,11 @@ void MainWindow::createControlPtsToolBar()
 
         m_cameraMtx[1] = readMtxFileStorage(fullFilePath, "CameraMatrix");
         m_distCoeffs[1] = readMtxFileStorage(fullFilePath, "DistCoeffs");
+
+        if (DEBUG1) {
+            qDebug() << "m_cameraMtx[1] = " << m_cameraMtx[1].data;
+            std::cout << "m_distCoeffs[1] = " << m_distCoeffs[1] << std::endl;
+        }
     });
 
     QPushButton *saveBtn = new QPushButton("Save");
@@ -194,6 +205,9 @@ void MainWindow::registerLeftRight()
     // Find Homography with Control Points
     QMatrix3x3 H = estimateHomographyProjection(m_vpImageView.first()->getControlPointsSorted(), m_vpImageView.last()->getControlPointsSorted());
 
+    if (DEBUG1)
+        std::cout << "H: " << H.constData() << std::endl;
+
     // Apply Homography
     QMatrix3x3 matrix;
     QImage img_warp = calc_projection_4points(matrix,
@@ -202,6 +216,8 @@ void MainWindow::registerLeftRight()
                                               m_vpImageItems.first()->getImage(),
                                               m_vpImageItems.first()->getImage().size());
 
+    if (DEBUG1)
+        std::cout << "matrix: " << matrix.constData() << std::endl;
 
     // Show on the first Image View ()
     QImage mixed = mixChannels(img_warp, m_vpImageItems.last()->getImage());
