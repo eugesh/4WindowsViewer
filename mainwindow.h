@@ -59,6 +59,8 @@ private:
     bool saveControlPoints(const QString &fp);
     // Apply Homography with Control Points and show on the first View
     void registerLeftRight();
+    // Universal File Storage YAML parameter loader // ToDo: move to lib
+    cv::Mat readMtxFileStorage(const QString &path, const QString mtxName);
 
 signals:
     void scaleChanged(double);
@@ -118,6 +120,7 @@ private:
     // Corresponding points
     QVector<quint32> m_pointsIds;
     QToolBar *m_controlPtToolBar;
+    cv::Mat m_cameraMtx[2], m_distCoeffs[2];
 };
 
 #endif // MAINWINDOW_H

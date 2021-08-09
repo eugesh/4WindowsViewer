@@ -76,6 +76,20 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+cv::Mat MainWindow::readMtxFileStorage(const QString &path, const QString mtxName) // ToDo: move to lib
+{
+    cv::Mat mat;
+    cv::FileStorage fs;
+
+    fs.open(path.toStdString(), cv::FileStorage::READ);
+
+    fs[mtxName.toStdString()] >> mat;
+
+    fs.release();
+
+    return mat;
+}
+
 void MainWindow::createControlPtsToolBar()
 {
     m_controlPtToolBar = new QToolBar("Control Points", this);
@@ -110,6 +124,36 @@ void MainWindow::createControlPtsToolBar()
         m_vpImageItems[1]->setImage(QImage(fullFilePath));
 
         m_vpImageView[1]->view()->scene()->update();
+    });
+
+    QPushButton *loadLeftCamMtxBtn = new QPushButton("CamML");
+    QPushButton *loadRightCamMtxBtn = new QPushButton("CamMR");
+
+    m_controlPtToolBar->addWidget(loadLeftCamMtxBtn);
+    m_controlPtToolBar->addWidget(loadRightCamMtxBtn);
+    loadLeftCamMtxBtn->setToolTip("Load Camera matrix and distrotion coefficients for the left camera");
+    loadLeftCamMtxBtn->setToolTip("Load Camera matrix and distrotion coefficients for the right camera");
+
+    connect(loadLeftCamMtxBtn, &QAbstractButton::pressed, [this]() {
+        static QString fullFilePath = "/home";
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+                      tr("File Storage YAML (*.yml *.yaml)"));
+
+        if (fullFilePath.isEmpty()) return;
+
+        m_cameraMtx[0] = readMtxFileStorage(fullFilePath, "CameraMatrix");
+        m_distCoeffs[0] = readMtxFileStorage(fullFilePath, "DistCoeffs");
+    });
+
+    connect(loadRightCamMtxBtn, &QAbstractButton::pressed, [this]() {
+        static QString fullFilePath = "/home";
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+                      tr("File Storage YAML (*.yml *.yaml)"));
+
+        if (fullFilePath.isEmpty()) return;
+
+        m_cameraMtx[1] = readMtxFileStorage(fullFilePath, "CameraMatrix");
+        m_distCoeffs[1] = readMtxFileStorage(fullFilePath, "DistCoeffs");
     });
 
     QPushButton *saveBtn = new QPushButton("Save");
