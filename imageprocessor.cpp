@@ -144,4 +144,24 @@ QImage getChannel(const QImage & InImg, ColorName chName)
     return curImg;
 }
 
+QImage mixChannels(const QImage &img1, const QImage &img2)
+{
+    if (img1.size() != img2.size())
+        return QImage();
+
+    QImage mixed(img1.size(), QImage::Format_RGB32);
+
+    for (int i = 0; i < img1.height(); ++i) {
+        for (int j = 0; j < img1.width(); ++j) {
+            QColor color;
+            color.setRed(img1.pixelColor(j, i).red() * 0.299 + img1.pixelColor(j, i).green() * 0.587 + img1.pixelColor(j, i).blue() * 0.114);
+            color.setGreen(0);
+            color.setBlue(img2.pixelColor(j, i).red() * 0.299 + img2.pixelColor(j, i).green() * 0.587 + img2.pixelColor(j, i).blue() * 0.114);
+            mixed.setPixelColor(j, i, color);
+        }
+    }
+
+    return mixed;
+}
+
 }

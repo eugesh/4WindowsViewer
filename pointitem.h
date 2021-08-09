@@ -13,9 +13,9 @@ public:
     enum { Type = UserType + 1 };
     PointItem(const QString &name="ControlPoint", quint32 id = 0, QObject *parent_object = nullptr, QGraphicsItem *parent = nullptr);
 
-    QPointF coord() { return mapToItem(parentItem(), m_coord); }
-    QString text();
-    quint32 id() { return m_id; }
+    QPointF coord() const { return mapToItem(parentItem(), m_coord); }
+    QString text() const;
+    quint32 id() const { return m_id; }
     int type() const override { return Type; } // Enable the use of qgraphicsitem_cast with this item.
 
 protected:

@@ -32,7 +32,7 @@ void PointItem::setText(const QString &text)
     update( );
 }
 
-QString PointItem::text( )
+QString PointItem::text( ) const
 {
     return myText;
 }

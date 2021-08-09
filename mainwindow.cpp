@@ -79,12 +79,15 @@ MainWindow::~MainWindow()
 void MainWindow::createControlPtsToolBar()
 {
     m_controlPtToolBar = new QToolBar("Control Points", this);
+    m_controlPtToolBar->setToolTip("Control Points Toolbar");
 
     QPushButton *loadLeftBtn = new QPushButton("Left");
     QPushButton *loadRightBtn = new QPushButton("Right");
 
     m_controlPtToolBar->addWidget(loadLeftBtn);
     m_controlPtToolBar->addWidget(loadRightBtn);
+    loadLeftBtn->setToolTip("Load left image");
+    loadLeftBtn->setToolTip("Load right image");
 
     connect(loadLeftBtn, &QAbstractButton::pressed, [this]() {
         if (m_vpImageItems.size() != 2)
@@ -114,6 +117,7 @@ void MainWindow::createControlPtsToolBar()
 
     QPushButton *saveBtn = new QPushButton("Save");
     m_controlPtToolBar->addWidget(saveBtn);
+    saveBtn->setToolTip("Save Control Points");
     connect(saveBtn, &QAbstractButton::pressed, [this]() {
         static QString fullFilePath = tr("/home");
         fullFilePath = QFileDialog::getSaveFileName(nullptr, tr("Enter filename or select file"),
@@ -121,8 +125,47 @@ void MainWindow::createControlPtsToolBar()
         saveControlPoints(fullFilePath);
     });
 
+    // Matching with Control Points
+    QPushButton *regBtn = new QPushButton("reg");
+    m_controlPtToolBar->addWidget(regBtn);
+    regBtn->setToolTip("Calculate Homography and Registrate images pair");
+    connect(regBtn, &QAbstractButton::pressed, [this]() {
+        registerLeftRight();
+    });
+
+    // ToDo: Feature points matching
+    QPushButton *matchBtn = new QPushButton("match");
+    m_controlPtToolBar->addWidget(matchBtn);
+    matchBtn->setToolTip("Calculate Homography and Registrate images pair");
+    connect(matchBtn, &QAbstractButton::pressed, []() {
+
+    });
+
     addToolBar(Qt::TopToolBarArea, m_controlPtToolBar);
     m_controlPtToolBar->hide();
+}
+
+void MainWindow::registerLeftRight()
+{
+    if (m_vpImageView.size() != 2)
+        return;
+
+    // Find Homography with Control Points
+    QMatrix3x3 H = estimateHomographyProjection(m_vpImageView.first()->getControlPointsSorted(), m_vpImageView.last()->getControlPointsSorted());
+
+    // Apply Homography
+    QMatrix3x3 matrix;
+    QImage img_warp = calc_projection_4points(matrix,
+                                              m_vpImageView.first()->getControlPointsSorted(),
+                                              m_vpImageView.last()->getControlPointsSorted(),
+                                              m_vpImageItems.first()->getImage(),
+                                              m_vpImageItems.first()->getImage().size());
+
+
+    // Show on the first Image View ()
+    QImage mixed = mixChannels(img_warp, m_vpImageItems.last()->getImage());
+    m_item->setImage(mixed);
+
 }
 
 bool MainWindow::saveControlPoints(const QString &fp)

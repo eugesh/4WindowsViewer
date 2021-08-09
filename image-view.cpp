@@ -1,4 +1,5 @@
 #include "image-view.h"
+#include "pointitem.h"
 
 #if defined(QT_PRINTSUPPORT_LIB)
 #include <QtPrintSupport/qtprintsupportglobal.h>
@@ -346,4 +347,26 @@ void ImageView::showContextMenu(const QPoint& pos)
     contextMenu.addAction(&action1);
 
     contextMenu.exec(mapToGlobal(pos));
+}
+
+QMap<QString, QPointF> ImageView::getControlPoints() const
+{
+    QMap<QString, QPointF> map;
+
+    auto item_list = view()->scene()->items();
+
+    foreach (auto item, item_list) {
+        PointItem *pi = nullptr;
+        pi = qgraphicsitem_cast<PointItem*>(item);
+        if (pi) {
+            map.insert(pi->text(), pi->coord());
+        }
+    }
+
+    return map;
+}
+
+std::vector<QPointF> ImageView::getControlPointsSorted() const
+{
+    return getControlPoints().values().toVector().toStdVector();
 }

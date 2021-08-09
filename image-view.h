@@ -46,6 +46,10 @@ public:
     void changeColorSpace(ColorSpace cs) { m_colorSpace = cs; }
     void changeChannelNumber(int cn);
     QSlider* tuneSlider() { return m_tuneSlider; }
+    // Get Control points sorted by IDs
+    std::vector<QPointF> getControlPointsSorted() const;
+    // Get dictionary of Control points ID <-> QPointF
+    QMap<QString, QPointF> getControlPoints() const;
 
 signals:
     void scaleChanged(double value);

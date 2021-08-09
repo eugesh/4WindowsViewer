@@ -57,6 +57,8 @@ private:
     void changeColorSpace(ColorSpace s);
     void createControlPtsToolBar();
     bool saveControlPoints(const QString &fp);
+    // Apply Homography with Control Points and show on the first View
+    void registerLeftRight();
 
 signals:
     void scaleChanged(double);
