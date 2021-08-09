@@ -90,9 +90,7 @@ void MainWindow::createControlPtsToolBar()
     loadLeftBtn->setToolTip("Load right image");
 
     connect(loadLeftBtn, &QAbstractButton::pressed, [this]() {
-        if (m_vpImageItems.size() != 2)
-            return ;
-
+        if (m_vpImageItems.size() != 2) return;
         static QString fullFilePath = "/home";
         fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
                       tr("Images (*.png *.bmp *.tif *.tiff *.gif *.xpm *.jpg *.jpeg *.JPG)"));
@@ -103,8 +101,7 @@ void MainWindow::createControlPtsToolBar()
     });
 
     connect(loadRightBtn, &QAbstractButton::pressed, [this]() {
-        if (m_vpImageItems.size() != 2)
-            return ;
+        if (m_vpImageItems.size() != 2) return;
 
         static QString fullFilePath = "/home";
         fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
@@ -303,12 +300,12 @@ void MainWindow::create3Windows()
     vSplitter->addWidget(m_view.get());
     vSplitter->addWidget(h1Splitter.get());
 
-    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Top right view", this)));
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom left view", this)));
     QGraphicsScene *scene = new QGraphicsScene(this);
     m_vpImageView.last()->view()->setScene(scene);
     h1Splitter->addWidget(m_vpImageView.last().get());
 
-    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom left view", this)));
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom right view", this)));
     QGraphicsScene *scene2 = new QGraphicsScene(this);
     m_vpImageView.last()->view()->setScene(scene2);
     h1Splitter->addWidget(m_vpImageView.last().get());
@@ -321,15 +318,15 @@ void MainWindow::create3Windows()
     for (int i = 0; i < m_vpImageView.size(); ++i) {
         connect(m_vpImageView[i].get(), &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
         connect(m_vpImageView[i].get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
-        connect(m_vpImageView[i].get(), &ImageView::tuneSliderChanged, this, &MainWindow::onTuneSliderChanged);
-        connect(m_vpImageView[i].get(), &ImageView::saveChannelImage, this, &MainWindow::onSaveChannel);
+        // connect(m_vpImageView[i].get(), &ImageView::tuneSliderChanged, this, &MainWindow::onTuneSliderChanged);
+        // connect(m_vpImageView[i].get(), &ImageView::saveChannelImage, this, &MainWindow::onSaveChannel);
         connect(m_vpImageView[i].get(), &ImageView::pointAdded, this, &MainWindow::onPointAdded);
         connect(this, &MainWindow::scaleChanged, m_vpImageView[i].get(), &ImageView::zoomIn);
         connect(this, &MainWindow::angleChanged, m_vpImageView[i].get(), &ImageView::rotate);
     }
 
-    m_vpSplitters.push_back(vSplitter);
     m_vpSplitters.push_back(h1Splitter);
+    m_vpSplitters.push_back(vSplitter);
 }
 
 void MainWindow::create4Windows()
@@ -569,10 +566,25 @@ void MainWindow::removeAdditionalWindows()
 {
     if (! m_view.isNull())
         setCentralWidget(m_view.get());
+
+    foreach (auto t, m_vpImageItems)
+        if (!t.isNull())
+            t.clear();
+
     if (m_vpImageItems.count())
         m_vpImageItems.clear();
+
+    foreach (auto t, m_vpImageView)
+        if (!t.isNull())
+            t.clear();
+
     if (m_vpImageView.count())
         m_vpImageView.clear();
+
+    foreach (auto t, m_vpSplitters)
+        if (!t.isNull())
+            t.clear();
+
     if (m_vpSplitters.count())
         m_vpSplitters.clear();
 }
