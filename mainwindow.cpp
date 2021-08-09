@@ -511,6 +511,8 @@ void MainWindow::onPointAdded(const QPoint &point)
     if (m_vpImageView.size() != 2)
         return;
 
+    auto sender = QObject::sender();
+
     quint32 newId;
     if (m_pointsIds.empty()) {
         newId = 0;
@@ -521,7 +523,21 @@ void MainWindow::onPointAdded(const QPoint &point)
 
     for (int i = 0; i < m_vpImageView.size(); ++i) {
         PointItem *pi = new PointItem("ControlPoint", newId, this, m_vpImageItems[i].get());
-        pi->setPos(point);
+        // QPointF pointOnImage;
+        // QPointF curs = m_vpImageView[i]->view()->scene()->cursor_scene_pos();
+        QPoint origin = m_vpImageView[i]->view()->mapFromGlobal(QCursor::pos());
+
+        if (qobject_cast<ImageView*>(sender))
+            origin = qobject_cast<ImageView*>(sender)->view()->mapFromGlobal(QCursor::pos());
+
+        QPointF relativeOrigin = m_vpImageView[i]->view()->mapToScene(origin) - m_vpImageItems[i]->pos();
+
+        //if (qobject_cast<ImageView*>(sender) == m_vpImageView[i].get()) {
+            pi->setPos(relativeOrigin);
+        /*} else {
+            QPointF pt = m_vpImageItems[i]->mapFromScene(relativeOrigin);
+            pi->setPos(pt);
+        }*/
         pi->setZValue(0);
         m_vpImageView[i].get();
         m_vpImageView[i]->view()->scene()->addItem(pi);
