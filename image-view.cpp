@@ -242,6 +242,16 @@ void ImageView::onTuneSliderValueChanged(int value)
     emit tuneSliderChanged(value);
 }
 
+void ImageView::keyPressEvent(QKeyEvent *event)
+{
+    if (event->matches(QKeySequence::SelectAll)) {
+           selectAllCP();
+    } else if (event->matches(QKeySequence::Delete)) {
+        removePoints();
+    }
+    QWidget::keyPressEvent(event);
+}
+
 void ImageView::resetView()
 {
     zoomSlider->setValue(250);
@@ -339,14 +349,78 @@ void ImageView::showContextMenu(const QPoint& pos)
     QMenu contextMenu(tr("Context menu"), this);
 
     QAction action1("Add control point", this);
+    QAction action2("Select all", this);
+    QAction action3("Select all Control Points", this);
+    QAction action4("Delete", this);
+
+    action3.setShortcut(QKeySequence::SelectAll); // ToDo: actually that doesn't trigger but looks fine in menu
+    action3.setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    action4.setShortcut(QKeySequence::Delete);
 
     connect(&action1, &QAction::triggered, [&]() {
         emit pointAdded(pos);
     });
 
+    connect(&action2, &QAction::triggered, [&]() {
+        selectAllItems();
+    });
+
+    connect(&action3, &QAction::triggered, [&]() {
+        selectAllCP();
+    });
+
+    connect(&action4, &QAction::triggered, [&]() {
+        removePoints();
+    });
+
     contextMenu.addAction(&action1);
+    contextMenu.addSeparator();
+    contextMenu.addAction(&action2);
+    contextMenu.addAction(&action3);
+    contextMenu.addAction(&action4);
 
     contextMenu.exec(mapToGlobal(pos));
+}
+
+void ImageView::removePoints(const std::vector<quint32> &ids)
+{
+    QList<QGraphicsItem *> allItems = view()->scene()->items();
+    QVector<quint32> ids_qvec = QVector<quint32>::fromStdVector(ids);
+
+    foreach(auto item, allItems) {
+        PointItem* pt = qgraphicsitem_cast<PointItem*> (item);
+        if (pt && ids_qvec.contains(pt->id())) {
+            view()->scene()->removeItem(item);
+        }
+    }
+}
+
+void ImageView::removePoints()
+{
+    std::vector<quint32> ids;
+    QList<QGraphicsItem *> selectedItems = view()->scene()->selectedItems();
+    foreach(auto item, selectedItems) {
+        PointItem* pt = qgraphicsitem_cast<PointItem*> (item);
+        if (pt) {
+            ids.push_back(pt->id());
+            view()->scene()->removeItem(item);
+        }
+    }
+    emit removeControlPoints(ids);
+}
+
+void ImageView::selectAllItems()
+{
+    QList<QGraphicsItem *> allItems = view()->scene()->items();
+    foreach(auto item, allItems)
+        item->setSelected(true);
+}
+
+void ImageView::selectAllCP() {
+    QList<QGraphicsItem *> allItems = view()->scene()->items();
+    foreach(auto item, allItems)
+        if (qgraphicsitem_cast<PointItem*> (item))
+            item->setSelected(true);
 }
 
 QMap<QString, QPointF> ImageView::getControlPoints() const

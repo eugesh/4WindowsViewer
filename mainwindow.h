@@ -92,6 +92,7 @@ private slots:
     // Input corresponding points by hand
     void onActionPointInput();
     void onPointAdded(const QPoint&);
+    void onRemoveControlPoints(const std::vector<quint32> &ids);
     //void onSimultaneousScrollCheck(int check);
 
 private:

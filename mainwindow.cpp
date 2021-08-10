@@ -414,9 +414,8 @@ void MainWindow::create3Windows()
     for (int i = 0; i < m_vpImageView.size(); ++i) {
         connect(m_vpImageView[i].get(), &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
         connect(m_vpImageView[i].get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
-        // connect(m_vpImageView[i].get(), &ImageView::tuneSliderChanged, this, &MainWindow::onTuneSliderChanged);
-        // connect(m_vpImageView[i].get(), &ImageView::saveChannelImage, this, &MainWindow::onSaveChannel);
         connect(m_vpImageView[i].get(), &ImageView::pointAdded, this, &MainWindow::onPointAdded);
+        connect(m_vpImageView[i].get(), &ImageView::removeControlPoints, this, &MainWindow::onRemoveControlPoints);
         connect(this, &MainWindow::scaleChanged, m_vpImageView[i].get(), &ImageView::zoomIn);
         connect(this, &MainWindow::angleChanged, m_vpImageView[i].get(), &ImageView::rotate);
     }
@@ -540,6 +539,12 @@ void MainWindow::onSaveChannel()
             }
         }
     }
+}
+
+void MainWindow::onRemoveControlPoints(const std::vector<quint32> &ids)
+{
+    foreach(auto view, m_vpImageView)
+        view->removePoints(ids);
 }
 
 // ToDo: combine code of addPointPair and onPointAdded together

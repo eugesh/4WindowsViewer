@@ -50,6 +50,7 @@ public:
     std::vector<QPointF> getControlPointsSorted() const;
     // Get dictionary of Control points ID <-> QPointF
     QMap<QString, QPointF> getControlPoints() const;
+    void removePoints(const std::vector<quint32> &ids);
 
 signals:
     void scaleChanged(double value);
@@ -57,11 +58,16 @@ signals:
     void tuneSliderChanged(int value);
     void saveChannelImage();
     void pointAdded(const QPoint&);
+    void removeAllItems();
+    void removeControlPoints(const std::vector<quint32> &ids);
 
 public slots:
     void zoomIn(int level = 1);
     void zoomOut(int level = 1);
     void rotate(double angleStep);
+
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
     void resetView();
@@ -76,6 +82,11 @@ private slots:
     void onSaveImageButton();
     void onTuneSliderValueChanged(int value);
     void showContextMenu(const QPoint&);
+
+private:
+    void removePoints();
+    void selectAllItems();
+    void selectAllCP();
 
 private:
     GraphicsView *graphicsView;
