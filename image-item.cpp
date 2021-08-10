@@ -60,7 +60,8 @@ ImageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
         //  if (DEBUG) m_pmap.save("tmp/befor_draw.bmp");
         if (DEBUG) m_pmap.save(QString("tmp/%1/%2").arg(intptr_t(this)).arg("befor_draw.bmp"));
         painter->drawPixmap(cur_pose, m_pmap); */
-        painter->drawImage(cur_pose, m_image_part2draw);
+        // painter->drawImage(cur_pose, m_image_part2draw); // Incorrect!!!!
+        painter->drawImage(QPointF(0,0), m_image_part2draw);
     }
     m_inUpdateProcess = false;
 }
@@ -87,11 +88,11 @@ void ImageItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void ImageItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (event->modifiers() & Qt::ShiftModifier) {
+    /*if (event->modifiers() & Qt::ShiftModifier) {
         cur_pose = event->pos();
         update();
         return;
-    }
+    }*/
     scene()->update();
     QGraphicsItem::mouseMoveEvent(event);
 }

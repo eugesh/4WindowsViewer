@@ -16,7 +16,7 @@ struct PixelPoint {
 QImage getChannel(const QImage &InImg, ColorSpace cs, int ch);
 QImage getChannel(const QImage &InImg, ColorName chName);
 QImage convertTo8(const QImage &InImg);
-
+QImage mixChannels(const QImage &gray1, const QImage &gray2);
 }
 
 /*class ImageProcessor
