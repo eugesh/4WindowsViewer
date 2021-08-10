@@ -56,11 +56,13 @@ private:
     // void changeColorSpace(QColor::Spec s);
     void changeColorSpace(ColorSpace s);
     void createControlPtsToolBar();
+    bool loadControlPoints(const QString &fp);
     bool saveControlPoints(const QString &fp);
     // Apply Homography with Control Points and show on the first View
     void registerLeftRight();
     // Universal File Storage YAML parameter loader // ToDo: move to lib
     cv::Mat readMtxFileStorage(const QString &path, const QString mtxName);
+    void addPointPair(const QString &pointName, const QPointF pts[2]);
 
 signals:
     void scaleChanged(double);

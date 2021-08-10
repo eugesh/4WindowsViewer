@@ -137,7 +137,7 @@ void MainWindow::createControlPtsToolBar()
 
     connect(loadLeftCamMtxBtn, &QAbstractButton::pressed, [this]() {
         static QString fullFilePath = "/home";
-        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose YAML file with Camera Matrix and distortion coefficients for the left image"), fullFilePath,
                       tr("File Storage YAML (*.yml *.yaml)"));
 
         if (fullFilePath.isEmpty()) return;
@@ -153,7 +153,7 @@ void MainWindow::createControlPtsToolBar()
 
     connect(loadRightCamMtxBtn, &QAbstractButton::pressed, [this]() {
         static QString fullFilePath = "/home";
-        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose YAML file with Camera Matrix and distortion coefficients for the right image"), fullFilePath,
                       tr("File Storage YAML (*.yml *.yaml)"));
 
         if (fullFilePath.isEmpty()) return;
@@ -167,6 +167,7 @@ void MainWindow::createControlPtsToolBar()
         }
     });
 
+    // Save/Load Control Points
     QPushButton *saveBtn = new QPushButton("Save");
     m_controlPtToolBar->addWidget(saveBtn);
     saveBtn->setToolTip("Save Control Points");
@@ -175,6 +176,17 @@ void MainWindow::createControlPtsToolBar()
         fullFilePath = QFileDialog::getSaveFileName(nullptr, tr("Enter filename or select file"),
                                                     fullFilePath, tr("CSV (*.csv)"));
         saveControlPoints(fullFilePath);
+    });
+
+    QPushButton *loadBtn = new QPushButton("Load");
+    m_controlPtToolBar->addWidget(loadBtn);
+    loadBtn->setToolTip("Load Control Points");
+    connect(loadBtn, &QAbstractButton::pressed, [this]() {
+        static QString fullFilePath = "/home";
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Enter filename or select file"), fullFilePath,
+                      tr("CSV (*.csv)"));
+
+        loadControlPoints(fullFilePath);
     });
 
     // Matching with Control Points
@@ -223,6 +235,30 @@ void MainWindow::registerLeftRight()
     QImage mixed = mixChannels(img_warp, m_vpImageItems.last()->getImage());
     m_item->setImage(mixed);
 
+}
+
+bool MainWindow::loadControlPoints(const QString &fp)
+{
+    if (m_vpImageView.size() != 2) {
+        return false;
+    }
+    QFile qFile(fp);
+    if (!qFile.open(QIODevice::Text | QIODevice::ReadOnly)) {
+            qCritical() << tr("Control points file %1 wasn't opened for read").arg(fp);
+    }
+
+    QTextStream saveStream(&qFile);
+
+    while (!saveStream.atEnd()) {
+        QPointF pts[2];
+        auto line = saveStream.readLine();
+        auto words = line.split(";");
+        pts[0] = QPointF(words[1].toDouble(), words[2].toDouble());
+        pts[1] = QPointF(words[3].toDouble(), words[4].toDouble());
+        addPointPair(words[0], pts);
+    }
+
+    return true;
 }
 
 bool MainWindow::saveControlPoints(const QString &fp)
@@ -506,6 +542,48 @@ void MainWindow::onSaveChannel()
     }
 }
 
+// ToDo: combine code of addPointPair and onPointAdded together
+void MainWindow::addPointPair(const QString &pointName, const QPointF pts[2])
+{
+    if (m_vpImageView.size() != 2)
+        return;
+
+    quint32 newId;
+    if (m_pointsIds.empty()) {
+        newId = 0;
+    } else {
+        newId = m_pointsIds.last() + 1;
+    }
+    m_pointsIds.push_back(newId);
+
+    for (int i = 0; i < m_vpImageView.size(); ++i) {
+        PointItem *pi = new PointItem("ControlPoint", newId, this, m_vpImageItems[i].get());
+
+        pi->setPos(pts[i]);
+        pi->setZValue(0);
+        pi->setText(pointName);
+        m_vpImageView[i]->view()->scene()->addItem(pi);
+    }
+
+    // Change text on both points after mouse double click
+    auto item_list1 = m_vpImageView[0]->view()->scene()->items();
+    auto item_list2 = m_vpImageView[1]->view()->scene()->items();
+    foreach (auto item1, item_list1) {
+        PointItem *pi1 = nullptr;
+        pi1 = qgraphicsitem_cast<PointItem*>(item1);
+        if (pi1) {
+            foreach (auto item2, item_list2) {
+                PointItem *pi2 = nullptr;
+                pi2 = qgraphicsitem_cast<PointItem*>(item2);
+                if (pi2 && pi1->id() == pi2->id()) {
+                    connect(pi1, &PointItem::textChanged, pi2, &PointItem::setText);
+                    connect(pi2, &PointItem::textChanged, pi1, &PointItem::setText);
+                }
+            }
+        }
+    }
+}
+
 void MainWindow::onPointAdded(const QPoint &point)
 {
     if (m_vpImageView.size() != 2)
@@ -523,8 +601,7 @@ void MainWindow::onPointAdded(const QPoint &point)
 
     for (int i = 0; i < m_vpImageView.size(); ++i) {
         PointItem *pi = new PointItem("ControlPoint", newId, this, m_vpImageItems[i].get());
-        // QPointF pointOnImage;
-        // QPointF curs = m_vpImageView[i]->view()->scene()->cursor_scene_pos();
+
         QPoint origin = m_vpImageView[i]->view()->mapFromGlobal(QCursor::pos());
 
         if (qobject_cast<ImageView*>(sender))
@@ -532,20 +609,14 @@ void MainWindow::onPointAdded(const QPoint &point)
 
         QPointF relativeOrigin = m_vpImageView[i]->view()->mapToScene(origin) - m_vpImageItems[i]->pos();
 
-        //if (qobject_cast<ImageView*>(sender) == m_vpImageView[i].get()) {
-            pi->setPos(relativeOrigin);
-        /*} else {
-            QPointF pt = m_vpImageItems[i]->mapFromScene(relativeOrigin);
-            pi->setPos(pt);
-        }*/
+        pi->setPos(relativeOrigin);
         pi->setZValue(0);
-        m_vpImageView[i].get();
         m_vpImageView[i]->view()->scene()->addItem(pi);
     }
 
+    // Change text on both points after mouse double click
     auto item_list1 = m_vpImageView[0]->view()->scene()->items();
     auto item_list2 = m_vpImageView[1]->view()->scene()->items();
-
     foreach (auto item1, item_list1) {
         PointItem *pi1 = nullptr;
         pi1 = qgraphicsitem_cast<PointItem*>(item1);
