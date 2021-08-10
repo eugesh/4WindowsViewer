@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QGraphicsItem>
 #include <QHBoxLayout>
+#include <QPushButton>
 #include <QSignalMapper>
 #include <QSlider>
 #include <QSplitter>
@@ -17,6 +18,7 @@
 #include "RubberRect.h"
 #include "pixelruler.h"
 
+static const bool DEBUG1 = true;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -35,6 +37,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_view->view()->setScene(m_scene.get());
 
     setCentralWidget(m_view.get());
+
+    // ToolBars
+    createControlPtsToolBar();
 
     connect(ui->actionOpen_image, &QAction::triggered, this, &MainWindow::openImage);
     connect(ui->actionSavePerspectiveProjectionMatrix, &QAction::triggered,
@@ -63,12 +68,196 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionLoadPerspectiveProjectionMatrix, &QAction::triggered,
             this, &MainWindow::onActionLoadPerspectiveProjectionMatrix);
     connect(ui->actionPixelRuler, &QAction::triggered, this, &MainWindow::onActionPixelRuler);
+    connect(ui->actionPointInput, &QAction::triggered, this, &MainWindow::onActionPointInput);
 }
 
 MainWindow::~MainWindow()
 {
     removeAdditionalWindows();
     delete ui;
+}
+
+cv::Mat MainWindow::readMtxFileStorage(const QString &path, const QString mtxName) // ToDo: move to lib
+{
+    cv::Mat mat;
+    cv::FileStorage fs;
+
+    fs.open(path.toStdString(), cv::FileStorage::READ);
+
+    fs[mtxName.toStdString()] >> mat;
+
+    fs.release();
+
+    return mat;
+}
+
+void MainWindow::createControlPtsToolBar()
+{
+    m_controlPtToolBar = new QToolBar("Control Points", this);
+    m_controlPtToolBar->setToolTip("Control Points Toolbar");
+
+    QPushButton *loadLeftBtn = new QPushButton("Left");
+    QPushButton *loadRightBtn = new QPushButton("Right");
+
+    m_controlPtToolBar->addWidget(loadLeftBtn);
+    m_controlPtToolBar->addWidget(loadRightBtn);
+    loadLeftBtn->setToolTip("Load left image");
+    loadLeftBtn->setToolTip("Load right image");
+
+    connect(loadLeftBtn, &QAbstractButton::pressed, [this]() {
+        if (m_vpImageItems.size() != 2) return;
+        static QString fullFilePath = "/home";
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+                      tr("Images (*.png *.bmp *.tif *.tiff *.gif *.xpm *.jpg *.jpeg *.JPG)"));
+
+        m_vpImageItems[0]->setImage(QImage(fullFilePath));
+
+        m_vpImageView[0]->view()->scene()->update();
+    });
+
+    connect(loadRightBtn, &QAbstractButton::pressed, [this]() {
+        if (m_vpImageItems.size() != 2) return;
+
+        static QString fullFilePath = "/home";
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+                      tr("Images (*.png *.bmp *.tif *.tiff *.gif *.xpm *.jpg *.jpeg *.JPG)"));
+
+        m_vpImageItems[1]->setImage(QImage(fullFilePath));
+
+        m_vpImageView[1]->view()->scene()->update();
+    });
+
+    QPushButton *loadLeftCamMtxBtn = new QPushButton("CamML");
+    QPushButton *loadRightCamMtxBtn = new QPushButton("CamMR");
+
+    m_controlPtToolBar->addWidget(loadLeftCamMtxBtn);
+    m_controlPtToolBar->addWidget(loadRightCamMtxBtn);
+    loadLeftCamMtxBtn->setToolTip("Load Camera matrix and distrotion coefficients for the left camera");
+    loadLeftCamMtxBtn->setToolTip("Load Camera matrix and distrotion coefficients for the right camera");
+
+    connect(loadLeftCamMtxBtn, &QAbstractButton::pressed, [this]() {
+        static QString fullFilePath = "/home";
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+                      tr("File Storage YAML (*.yml *.yaml)"));
+
+        if (fullFilePath.isEmpty()) return;
+
+        m_cameraMtx[0] = readMtxFileStorage(fullFilePath, "CameraMatrix");
+        m_distCoeffs[0] = readMtxFileStorage(fullFilePath, "DistCoeffs");
+
+        if (DEBUG1) {
+            std::cout << "m_cameraMtx[0] = " << m_cameraMtx[0] << std::endl;
+            std::cout << "m_distCoeffs[0] = " << m_distCoeffs[0] << std::endl;
+        }
+    });
+
+    connect(loadRightCamMtxBtn, &QAbstractButton::pressed, [this]() {
+        static QString fullFilePath = "/home";
+        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+                      tr("File Storage YAML (*.yml *.yaml)"));
+
+        if (fullFilePath.isEmpty()) return;
+
+        m_cameraMtx[1] = readMtxFileStorage(fullFilePath, "CameraMatrix");
+        m_distCoeffs[1] = readMtxFileStorage(fullFilePath, "DistCoeffs");
+
+        if (DEBUG1) {
+            qDebug() << "m_cameraMtx[1] = " << m_cameraMtx[1].data;
+            std::cout << "m_distCoeffs[1] = " << m_distCoeffs[1] << std::endl;
+        }
+    });
+
+    QPushButton *saveBtn = new QPushButton("Save");
+    m_controlPtToolBar->addWidget(saveBtn);
+    saveBtn->setToolTip("Save Control Points");
+    connect(saveBtn, &QAbstractButton::pressed, [this]() {
+        static QString fullFilePath = tr("/home");
+        fullFilePath = QFileDialog::getSaveFileName(nullptr, tr("Enter filename or select file"),
+                                                    fullFilePath, tr("CSV (*.csv)"));
+        saveControlPoints(fullFilePath);
+    });
+
+    // Matching with Control Points
+    QPushButton *regBtn = new QPushButton("reg");
+    m_controlPtToolBar->addWidget(regBtn);
+    regBtn->setToolTip("Calculate Homography and Registrate images pair");
+    connect(regBtn, &QAbstractButton::pressed, [this]() {
+        registerLeftRight();
+    });
+
+    // ToDo: Feature points matching
+    QPushButton *matchBtn = new QPushButton("match");
+    m_controlPtToolBar->addWidget(matchBtn);
+    matchBtn->setToolTip("Calculate Homography and Registrate images pair");
+    connect(matchBtn, &QAbstractButton::pressed, []() {
+
+    });
+
+    addToolBar(Qt::TopToolBarArea, m_controlPtToolBar);
+    m_controlPtToolBar->hide();
+}
+
+void MainWindow::registerLeftRight()
+{
+    if (m_vpImageView.size() != 2)
+        return;
+
+    // Find Homography with Control Points
+    QMatrix3x3 H = estimateHomographyProjection(m_vpImageView.first()->getControlPointsSorted(), m_vpImageView.last()->getControlPointsSorted());
+
+    if (DEBUG1)
+        std::cout << "H: " << H.constData() << std::endl;
+
+    // Apply Homography
+    QMatrix3x3 matrix;
+    QImage img_warp = calc_projection_4points(matrix,
+                                              m_vpImageView.first()->getControlPointsSorted(),
+                                              m_vpImageView.last()->getControlPointsSorted(),
+                                              m_vpImageItems.first()->getImage(),
+                                              m_vpImageItems.first()->getImage().size());
+
+    if (DEBUG1)
+        std::cout << "matrix: " << matrix.constData() << std::endl;
+
+    // Show on the first Image View ()
+    QImage mixed = mixChannels(img_warp, m_vpImageItems.last()->getImage());
+    m_item->setImage(mixed);
+
+}
+
+bool MainWindow::saveControlPoints(const QString &fp)
+{
+    if (m_vpImageView.size() != 2) {
+        return false;
+    }
+
+    QFile qFile(fp);
+    if (!qFile.open(QIODevice::Text | QIODevice::WriteOnly)) {
+            qCritical() << tr("Controlo points file %1 wasn't opened for write").arg(fp);
+    }
+
+    QTextStream saveStream(&qFile);
+
+    auto item_list1 = m_vpImageView[0]->view()->scene()->items();
+    auto item_list2 = m_vpImageView[1]->view()->scene()->items();
+
+    foreach (auto item1, item_list1) {
+        PointItem *pi1 = nullptr;
+        pi1 = qgraphicsitem_cast<PointItem*>(item1);
+        if (pi1) {
+            foreach (auto item2, item_list2) {
+                PointItem *pi2 = nullptr;
+                pi2 = qgraphicsitem_cast<PointItem*>(item2);
+                if (pi2 && pi1->id() == pi2->id()) {
+                    saveStream << pi1->text() << ";" // QString::number(pi1->id())
+                               << pi1->coord().x() << ";" << pi1->coord().y() << ";"
+                               << pi2->coord().x() << ";" << pi2->coord().y() << "\n";
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 void MainWindow::on4WindowsCheck(int check)
@@ -84,6 +273,23 @@ void MainWindow::on4WindowsCheck(int check)
             openImages4Windows();
     } else {
         hide4Windows();
+    }
+}
+
+void MainWindow::on3WindowsCheck(int check)
+{
+    if (check) {
+        removeAdditionalWindows();
+        ui->action2Windows->setChecked(false);
+        ui->action4Windows->setChecked(false);
+        if (m_vpSplitters.empty())
+            create3Windows();
+        else
+            show3Windows();
+        if (m_vpImageItems.empty())
+            openImages3Windows();
+    } else {
+        hide3Windows();
     }
 }
 
@@ -142,6 +348,45 @@ void MainWindow::changeColorSpace(ColorSpace s)
         m_vpImageView[i]->changeColorSpace(m_colorSpace);
         m_vpImageView[i]->changeChannelNumber(i);
     }
+}
+
+void MainWindow::create3Windows()
+{
+    QSharedPointer<QSplitter> h1Splitter = QSharedPointer<QSplitter>(new QSplitter(this));
+
+    QSharedPointer<QSplitter> vSplitter = QSharedPointer<QSplitter> (new QSplitter(this));
+    vSplitter->setOrientation(Qt::Vertical);
+
+    vSplitter->addWidget(m_view.get());
+    vSplitter->addWidget(h1Splitter.get());
+
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom left view", this)));
+    QGraphicsScene *scene = new QGraphicsScene(this);
+    m_vpImageView.last()->view()->setScene(scene);
+    h1Splitter->addWidget(m_vpImageView.last().get());
+
+    m_vpImageView.push_back(QSharedPointer<ImageView>(new ImageView("Bottom right view", this)));
+    QGraphicsScene *scene2 = new QGraphicsScene(this);
+    m_vpImageView.last()->view()->setScene(scene2);
+    h1Splitter->addWidget(m_vpImageView.last().get());
+
+    QHBoxLayout *layout = new QHBoxLayout;
+    layout->addWidget(vSplitter.get());
+    setLayout(layout);
+    setCentralWidget(vSplitter.get());
+
+    for (int i = 0; i < m_vpImageView.size(); ++i) {
+        connect(m_vpImageView[i].get(), &ImageView::scaleChanged, this, &MainWindow::scaleChanged);
+        connect(m_vpImageView[i].get(), &ImageView::angleChanged, this, &MainWindow::angleChanged);
+        // connect(m_vpImageView[i].get(), &ImageView::tuneSliderChanged, this, &MainWindow::onTuneSliderChanged);
+        // connect(m_vpImageView[i].get(), &ImageView::saveChannelImage, this, &MainWindow::onSaveChannel);
+        connect(m_vpImageView[i].get(), &ImageView::pointAdded, this, &MainWindow::onPointAdded);
+        connect(this, &MainWindow::scaleChanged, m_vpImageView[i].get(), &ImageView::zoomIn);
+        connect(this, &MainWindow::angleChanged, m_vpImageView[i].get(), &ImageView::rotate);
+    }
+
+    m_vpSplitters.push_back(h1Splitter);
+    m_vpSplitters.push_back(vSplitter);
 }
 
 void MainWindow::create4Windows()
@@ -261,6 +506,68 @@ void MainWindow::onSaveChannel()
     }
 }
 
+void MainWindow::onPointAdded(const QPoint &point)
+{
+    if (m_vpImageView.size() != 2)
+        return;
+
+    auto sender = QObject::sender();
+
+    quint32 newId;
+    if (m_pointsIds.empty()) {
+        newId = 0;
+    } else {
+        newId = m_pointsIds.last() + 1;
+    }
+    m_pointsIds.push_back(newId);
+
+    for (int i = 0; i < m_vpImageView.size(); ++i) {
+        PointItem *pi = new PointItem("ControlPoint", newId, this, m_vpImageItems[i].get());
+        // QPointF pointOnImage;
+        // QPointF curs = m_vpImageView[i]->view()->scene()->cursor_scene_pos();
+        QPoint origin = m_vpImageView[i]->view()->mapFromGlobal(QCursor::pos());
+
+        if (qobject_cast<ImageView*>(sender))
+            origin = qobject_cast<ImageView*>(sender)->view()->mapFromGlobal(QCursor::pos());
+
+        QPointF relativeOrigin = m_vpImageView[i]->view()->mapToScene(origin) - m_vpImageItems[i]->pos();
+
+        //if (qobject_cast<ImageView*>(sender) == m_vpImageView[i].get()) {
+            pi->setPos(relativeOrigin);
+        /*} else {
+            QPointF pt = m_vpImageItems[i]->mapFromScene(relativeOrigin);
+            pi->setPos(pt);
+        }*/
+        pi->setZValue(0);
+        m_vpImageView[i].get();
+        m_vpImageView[i]->view()->scene()->addItem(pi);
+    }
+
+    auto item_list1 = m_vpImageView[0]->view()->scene()->items();
+    auto item_list2 = m_vpImageView[1]->view()->scene()->items();
+
+    foreach (auto item1, item_list1) {
+        PointItem *pi1 = nullptr;
+        pi1 = qgraphicsitem_cast<PointItem*>(item1);
+        if (pi1) {
+            foreach (auto item2, item_list2) {
+                PointItem *pi2 = nullptr;
+                pi2 = qgraphicsitem_cast<PointItem*>(item2);
+                if (pi2 && pi1->id() == pi2->id()) {
+                    connect(pi1, &PointItem::textChanged, pi2, &PointItem::setText);
+                    connect(pi2, &PointItem::textChanged, pi1, &PointItem::setText);
+                }
+            }
+        }
+    }
+}
+
+void MainWindow::onActionPointInput()
+{
+    m_controlPtToolBar->show();
+    on3WindowsCheck(1);
+}
+
 void MainWindow::create2Windows()
 {
     QSharedPointer<QSplitter> hSplitter = QSharedPointer<QSplitter>(new QSplitter(this));
@@ -286,6 +593,21 @@ void MainWindow::create2Windows()
     }
 
     m_vpSplitters.push_back(hSplitter);
+}
+
+void MainWindow::openImages3Windows()
+{
+    openImages4Windows();
+}
+
+void MainWindow::show3Windows()
+{
+
+}
+
+void MainWindow::hide3Windows()
+{
+
 }
 
 void MainWindow::openImages4Windows()
@@ -320,10 +642,25 @@ void MainWindow::removeAdditionalWindows()
 {
     if (! m_view.isNull())
         setCentralWidget(m_view.get());
+
+    foreach (auto t, m_vpImageItems)
+        if (!t.isNull())
+            t.clear();
+
     if (m_vpImageItems.count())
         m_vpImageItems.clear();
+
+    foreach (auto t, m_vpImageView)
+        if (!t.isNull())
+            t.clear();
+
     if (m_vpImageView.count())
         m_vpImageView.clear();
+
+    foreach (auto t, m_vpSplitters)
+        if (!t.isNull())
+            t.clear();
+
     if (m_vpSplitters.count())
         m_vpSplitters.clear();
 }

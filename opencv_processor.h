@@ -71,7 +71,7 @@ cv::Mat MatrixToMat(const QGenericMatrix<N, M, T> &matrix)
 }
 
 // @MOVE_TO_LIB, @MOVETOLIB
-QMatrix3x3 estimatePerspectiveProjection(const std::vector<QPointF> &points1, const std::vector<QPointF> &points2)
+QMatrix3x3 estimateHomographyProjection(const std::vector<QPointF> &points1, const std::vector<QPointF> &points2)
 {
     QMatrix3x3 out;
     // Convert points from Qt to OpenCV
