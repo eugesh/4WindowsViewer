@@ -5,6 +5,7 @@
 #include <QGraphicsItem>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QSettings>
 #include <QSignalMapper>
 #include <QSlider>
 #include <QSplitter>
@@ -25,6 +26,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    initSettings();
 
     m_scene = QSharedPointer<QGraphicsScene>(new QGraphicsScene(this));
     // ui->graphicsView->setScene(m_scene);
@@ -77,6 +80,39 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void
+MainWindow::closeEvent(QCloseEvent *event) {
+    Q_UNUSED(event)
+
+    if (! m_settings)
+        m_settings = new QSettings(tr("eugesh"), tr("4WindowsViewer"));
+
+    m_settings->beginGroup("lastSettings");
+
+    m_settings->setValue("left_image_pair_path", m_leftImagePairPath);
+    m_settings->setValue("right_image_pair_path", m_rightImagePairPath);
+    m_settings->setValue("left_calib_matrix_path", m_leftCalibMatrixPath);
+    m_settings->setValue("right_calib_matrixpath", m_rightImagePairPath);
+    m_settings->setValue("control_points_path", m_controlPointsPath);
+
+    m_settings->endGroup();
+}
+
+void MainWindow::initSettings() {
+    m_settings = new QSettings(tr("eugesh"), tr("4WindowsViewer"));
+    m_settings->beginGroup("lastSettings");
+
+    m_leftImagePairPath = m_settings->value("left_image_pair_path").toString();
+    m_rightImagePairPath = m_settings->value("right_image_pair_path").toString();
+
+    m_leftCalibMatrixPath = m_settings->value("left_calib_matrix_path").toString();
+    m_rightCalibMatrixPath = m_settings->value("right_calib_matrixpath").toString();
+
+    m_controlPointsPath = m_settings->value("control_points_path").toString();
+
+    m_settings->endGroup();
+}
+
 cv::Mat MainWindow::readMtxFileStorage(const QString &path, const QString mtxName) // ToDo: move to lib
 {
     cv::Mat mat;
@@ -106,23 +142,20 @@ void MainWindow::createControlPtsToolBar()
 
     connect(loadLeftBtn, &QAbstractButton::pressed, [this]() {
         if (m_vpImageItems.size() != 2) return;
-        static QString fullFilePath = "/home";
-        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+        m_leftImagePairPath = QFileDialog::getOpenFileName(this, tr("Choose image file"), m_leftImagePairPath,
                       tr("Images (*.png *.bmp *.tif *.tiff *.gif *.xpm *.jpg *.jpeg *.JPG)"));
 
-        m_vpImageItems[0]->setImage(QImage(fullFilePath));
+        m_vpImageItems[0]->setImage(QImage(m_leftImagePairPath));
 
         m_vpImageView[0]->view()->scene()->update();
     });
 
     connect(loadRightBtn, &QAbstractButton::pressed, [this]() {
         if (m_vpImageItems.size() != 2) return;
-
-        static QString fullFilePath = "/home";
-        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose image file"), fullFilePath,
+        m_rightImagePairPath = QFileDialog::getOpenFileName(this, tr("Choose image file"), m_rightImagePairPath,
                       tr("Images (*.png *.bmp *.tif *.tiff *.gif *.xpm *.jpg *.jpeg *.JPG)"));
 
-        m_vpImageItems[1]->setImage(QImage(fullFilePath));
+        m_vpImageItems[1]->setImage(QImage(m_rightImagePairPath));
 
         m_vpImageView[1]->view()->scene()->update();
     });
@@ -136,14 +169,14 @@ void MainWindow::createControlPtsToolBar()
     loadRightCamMtxBtn->setToolTip("Load Camera matrix and distrotion coefficients for the right camera");
 
     connect(loadLeftCamMtxBtn, &QAbstractButton::pressed, [this]() {
-        static QString fullFilePath = "/home";
-        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose YAML file with Camera Matrix and distortion coefficients for the left image"), fullFilePath,
-                      tr("File Storage YAML (*.yml *.yaml)"));
+        m_leftCalibMatrixPath = QFileDialog::getOpenFileName(this,
+                      tr("Choose YAML file with Camera Matrix and distortion coefficients for the left image"),
+                      m_leftCalibMatrixPath, tr("File Storage YAML (*.yml *.yaml)"));
 
-        if (fullFilePath.isEmpty()) return;
+        if (m_leftCalibMatrixPath.isEmpty()) return;
 
-        m_cameraMtx[0] = readMtxFileStorage(fullFilePath, "CameraMatrix");
-        m_distCoeffs[0] = readMtxFileStorage(fullFilePath, "DistCoeffs");
+        m_cameraMtx[0] = readMtxFileStorage(m_leftCalibMatrixPath, "CameraMatrix");
+        m_distCoeffs[0] = readMtxFileStorage(m_leftCalibMatrixPath, "DistCoeffs");
 
         if (DEBUG1) {
             std::cout << "m_cameraMtx[0] = " << m_cameraMtx[0] << std::endl;
@@ -152,14 +185,14 @@ void MainWindow::createControlPtsToolBar()
     });
 
     connect(loadRightCamMtxBtn, &QAbstractButton::pressed, [this]() {
-        static QString fullFilePath = "/home";
-        fullFilePath = QFileDialog::getOpenFileName(this, tr("Choose YAML file with Camera Matrix and distortion coefficients for the right image"), fullFilePath,
-                      tr("File Storage YAML (*.yml *.yaml)"));
+        m_rightCalibMatrixPath = QFileDialog::getOpenFileName(this,
+                      tr("Choose YAML file with Camera Matrix and distortion coefficients for the right image"),
+                      m_rightCalibMatrixPath, tr("File Storage YAML (*.yml *.yaml)"));
 
-        if (fullFilePath.isEmpty()) return;
+        if (m_rightCalibMatrixPath.isEmpty()) return;
 
-        m_cameraMtx[1] = readMtxFileStorage(fullFilePath, "CameraMatrix");
-        m_distCoeffs[1] = readMtxFileStorage(fullFilePath, "DistCoeffs");
+        m_cameraMtx[1] = readMtxFileStorage(m_rightCalibMatrixPath, "CameraMatrix");
+        m_distCoeffs[1] = readMtxFileStorage(m_rightCalibMatrixPath, "DistCoeffs");
 
         if (DEBUG1) {
             qDebug() << "m_cameraMtx[1] = " << m_cameraMtx[1].data;
@@ -172,21 +205,19 @@ void MainWindow::createControlPtsToolBar()
     m_controlPtToolBar->addWidget(saveBtn);
     saveBtn->setToolTip("Save Control Points");
     connect(saveBtn, &QAbstractButton::pressed, [this]() {
-        static QString fullFilePath = tr("/home");
-        fullFilePath = QFileDialog::getSaveFileName(nullptr, tr("Enter filename or select file"),
-                                                    fullFilePath, tr("CSV (*.csv)"));
-        saveControlPoints(fullFilePath);
+        m_controlPointsPath = QFileDialog::getSaveFileName(nullptr, tr("Enter filename or select file"),
+                                                    m_controlPointsPath, tr("CSV (*.csv)"));
+        saveControlPoints(m_controlPointsPath);
     });
 
     QPushButton *loadBtn = new QPushButton("Load");
     m_controlPtToolBar->addWidget(loadBtn);
     loadBtn->setToolTip("Load Control Points");
     connect(loadBtn, &QAbstractButton::pressed, [this]() {
-        static QString fullFilePath = "/home";
-        fullFilePath = QFileDialog::getOpenFileName(this, tr("Enter filename or select file"), fullFilePath,
+        m_controlPointsPath = QFileDialog::getOpenFileName(this, tr("Enter filename or select file"), m_controlPointsPath,
                       tr("CSV (*.csv)"));
 
-        loadControlPoints(fullFilePath);
+        loadControlPoints(m_controlPointsPath);
     });
 
     // Matching with Control Points
