@@ -16,6 +16,7 @@ class QDockWidget;
 class ImageView;
 class PixelRuler;
 class RubberRect;
+class QSettings;
 QT_END_NAMESPACE
 
 using namespace geom;
@@ -38,6 +39,9 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 private:
     void applyProjectiveTransform(QSize outSize);
     void create4Windows();
@@ -48,6 +52,7 @@ private:
     void openImages3Windows();
     void show3Windows();
     void hide3Windows();
+    void initSettings();
     // 4 Windows: Color image + H,S,V or R,G,B
     void openImages4Windows();
     void show4Windows();
@@ -120,10 +125,17 @@ private:
     QSharedPointer<RubberRect> m_RR;
     QSharedPointer<PixelRuler> m_PixelRuler;
 
+    QSettings *m_settings = nullptr;
+
     // Corresponding points
     QVector<quint32> m_pointsIds;
     QToolBar *m_controlPtToolBar;
     cv::Mat m_cameraMtx[2], m_distCoeffs[2];
+    QString m_leftImagePairPath;
+    QString m_rightImagePairPath;
+    QString m_leftCalibMatrixPath;
+    QString m_rightCalibMatrixPath;
+    QString m_controlPointsPath;
 };
 
 #endif // MAINWINDOW_H
