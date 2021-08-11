@@ -133,7 +133,7 @@ void MainWindow::createControlPtsToolBar()
     m_controlPtToolBar->addWidget(loadLeftCamMtxBtn);
     m_controlPtToolBar->addWidget(loadRightCamMtxBtn);
     loadLeftCamMtxBtn->setToolTip("Load Camera matrix and distrotion coefficients for the left camera");
-    loadLeftCamMtxBtn->setToolTip("Load Camera matrix and distrotion coefficients for the right camera");
+    loadRightCamMtxBtn->setToolTip("Load Camera matrix and distrotion coefficients for the right camera");
 
     connect(loadLeftCamMtxBtn, &QAbstractButton::pressed, [this]() {
         static QString fullFilePath = "/home";
@@ -200,7 +200,7 @@ void MainWindow::createControlPtsToolBar()
     // ToDo: Feature points matching
     QPushButton *matchBtn = new QPushButton("match");
     m_controlPtToolBar->addWidget(matchBtn);
-    matchBtn->setToolTip("Calculate Homography and Registrate images pair");
+    matchBtn->setToolTip("ToDo: find and match feature points");
     connect(matchBtn, &QAbstractButton::pressed, []() {
 
     });
