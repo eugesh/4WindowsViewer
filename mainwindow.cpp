@@ -178,6 +178,8 @@ void MainWindow::createControlPtsToolBar()
         m_cameraMtx[0] = readMtxFileStorage(m_leftCalibMatrixPath, "CameraMatrix");
         m_distCoeffs[0] = readMtxFileStorage(m_leftCalibMatrixPath, "DistCoeffs");
 
+        m_vpImageItems.front()->setFiltered(undistort(m_vpImageItems.front()->getImage(), m_cameraMtx[0], m_distCoeffs[0]));
+
         if (DEBUG1) {
             std::cout << "m_cameraMtx[0] = " << m_cameraMtx[0] << std::endl;
             std::cout << "m_distCoeffs[0] = " << m_distCoeffs[0] << std::endl;
@@ -193,6 +195,8 @@ void MainWindow::createControlPtsToolBar()
 
         m_cameraMtx[1] = readMtxFileStorage(m_rightCalibMatrixPath, "CameraMatrix");
         m_distCoeffs[1] = readMtxFileStorage(m_rightCalibMatrixPath, "DistCoeffs");
+
+        m_vpImageItems.back()->setFiltered(undistort(m_vpImageItems.back()->getImage(), m_cameraMtx[1], m_distCoeffs[1]));
 
         if (DEBUG1) {
             qDebug() << "m_cameraMtx[1] = " << m_cameraMtx[1].data;

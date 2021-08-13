@@ -20,7 +20,7 @@
 #include <opencv2/calib3d.hpp>
 
 // const std::vector<geom::PixelPoint()> &rubberRectPoints
-//constexpr int DEBUG = 1;
+constexpr int DEBUG2 = 1;
 
 QImage calc_projection_4points_ocv(cv::Mat &matrix,
                                    const std::vector<cv::Point2d> &points1,
@@ -139,12 +139,12 @@ QImage calc_projection_4points_ocv(cv::Mat &matrix,
         or points1.size() < 4 or points2.size() < 4)
         return {};
 
-    if (DEBUG) {
+    if (DEBUG2) {
         std::cout << "Points1: "/* << points1*/ << std::endl;
         for (int i = 0; i < points1.size(); ++i)
             std::cout << points1[i] << " ";
     }
-    if (DEBUG) {
+    if (DEBUG2) {
         std::cout << std::endl << "Points2: " /*<< points2 */<< std::endl;
         std::cout << "Size = " << points2.size() << std::endl;
         for (int i = 0; i < points2.size(); ++i)
@@ -166,11 +166,11 @@ QImage calc_projection_4points_ocv(cv::Mat &matrix,
         return {};
     }
 
-    if (DEBUG) std::cout << std::endl << "matrix: " << matrix << std::endl;
-    if (DEBUG) std::cout << std::endl << "sizeOut: " << sizeOut << std::endl;
+    if (DEBUG2) std::cout << std::endl << "matrix: " << matrix << std::endl;
+    if (DEBUG2) std::cout << std::endl << "sizeOut: " << sizeOut << std::endl;
 
     // cv::warpPerspective(ocv_imageIn, ocv_imageOut, M, cv::Size2d(ocv_imageIn.rows, ocv_imageIn.cols));
-    if (DEBUG) cv::imwrite("imageIn2.png", imageIn);
+    if (DEBUG2) cv::imwrite("imageIn2.png", imageIn);
     try {
         cv::warpPerspective(imageIn, ocv_imageOut, matrix, sizeOut);
     } catch (const std::exception& ex) {
@@ -186,9 +186,9 @@ QImage calc_projection_4points_ocv(cv::Mat &matrix,
     /*for (int i = 0; i < M.rows; ++i) {
         for (int j = 0; j < M.cols; ++j) {
             matrix(i, j) = M.at<double>(j, i);
-            if (DEBUG) std::cout << M.at<double>(j, i) << " ";
+            if (DEBUG2) std::cout << M.at<double>(j, i) << " ";
         }
-        if (DEBUG) std::cout << '\n';
+        if (DEBUG2) std::cout << '\n';
     }*/
 
     // Convert images back to Qt
@@ -209,13 +209,24 @@ cv::Mat applyBWThreshold(const cv::Mat &mat, int threshold, bool isInverse)
 
     // CV_EXPORTS_W double threshold( InputArray src, OutputArray dst,
     // double thresh, double maxval, int type );
-    if (DEBUG) cv::imwrite("tmp/mat_before_threshold.png", mat);
+    if (DEBUG2) cv::imwrite("tmp/mat_before_threshold.png", mat);
     cv::threshold(mat, outMat, threshold, 255, cv::THRESH_BINARY + isInverse);
 
-    if (DEBUG) cv::imwrite("tmp/outMat_threshold.png", outMat);
+    if (DEBUG2) cv::imwrite("tmp/outMat_threshold.png", outMat);
     // std::cout << outMat << std::endl;
 
     return outMat;
+}
+
+QImage undistort(const QImage& qimg, cv::Mat cameraMtx, cv::Mat distCoeffs) {
+    cv::Mat mat = imageConverter(qimg);
+
+    cv::Mat outMat(mat.size(), mat.type());
+    cv::undistort(mat, outMat, cameraMtx, distCoeffs, cameraMtx);
+
+    if (DEBUG2) cv::imwrite("undistort.png", outMat);
+
+    return imageConverter(outMat);
 }
 
 #endif // OPENCV_PROCESSOR_H
