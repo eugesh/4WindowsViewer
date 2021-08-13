@@ -30,9 +30,13 @@ public:
     void setImage(const QImage &img) {
         m_image = img;
         m_image_part2draw = img;
+        bindQImageMat();
     }
     QImage setFiltered(const QImage &img);
+    cv::Mat setFiltered(cv::Mat mat) { m_mat_filtered = mat; scene()->update(); return m_mat_filtered; }
     QImage getImage() const { return m_image; }
+    QImage::Format format() { return m_image_part2draw.format(); }
+    cv::Mat getMat() { return m_mat; }
     QImage getFiltered() const { return m_image_part2draw; }
     // QImage applyFilterOnImage();
     // QImage applyFilterOnFiltered();
@@ -43,12 +47,16 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
+    void bindQImageMat();
+
+private:
     // Original
     QImage m_image;
     // Filtered
     QImage m_image_part2draw;
     // Temporal storage for OpenCV functions
     cv::Mat m_mat;
+    cv::Mat m_mat_filtered;
     QPixmap m_pmap;
     QPointF cur_pose;
     bool m_inUpdateProcess = false;

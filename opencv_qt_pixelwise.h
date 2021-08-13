@@ -47,7 +47,7 @@ constexpr bool DEBUG = 0;
 
 namespace ASM {
     // NOTE: This does not cover all cases - it should be easy to add new ones as required.
-    inline QImage  cvMatToQImage(const cv::Mat &inMat)
+    inline QImage cvMatToQImage_pxw(const cv::Mat &inMat) // Pixel wise
     {
         switch (inMat.type())
         {
@@ -132,7 +132,7 @@ namespace ASM {
             }
 
             default:
-                qWarning() << "ASM::cvMatToQImage() - cv::Mat image type not handled in switch:" << inMat.type();
+                qWarning() << "ASM::cvMatToQImage_pxw() - cv::Mat image type not handled in switch:" << inMat.type();
                 break;
         }
 
@@ -141,14 +141,14 @@ namespace ASM {
 
     inline QPixmap cvMatToQPixmap(const cv::Mat &inMat)
     {
-        return QPixmap::fromImage(cvMatToQImage( inMat ));
+        return QPixmap::fromImage(cvMatToQImage_pxw( inMat ));
     }
 
     // If inImage exists for the lifetime of the resulting cv::Mat, pass false to inCloneImageData to share inImage's
     // data with the cv::Mat directly
     //    NOTE: Format_RGB888 is an exception since we need to use a local QImage and thus must clone the data regardless
     //    NOTE: This does not cover all cases - it should be easy to add new ones as required.
-    inline cv::Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData = true)
+    inline cv::Mat QImageToCvMat_pxw(const QImage &inImage, bool inCloneImageData = true)
     {
         switch (inImage.format())
         {
@@ -178,7 +178,7 @@ namespace ASM {
             {
                 if (!inCloneImageData)
                 {
-                    qWarning() << "ASM::QImageToCvMat() - Conversion requires cloning so we don't modify the original QImage data";
+                    qWarning() << "ASM::QImageToCvMat_pxw() - Conversion requires cloning so we don't modify the original QImage data";
                 }
 
                 if (DEBUG) inImage.save("tmp/InImage_Format_RGB32.png");
@@ -212,7 +212,7 @@ namespace ASM {
             {
                 if (!inCloneImageData)
                 {
-                    qWarning() << "ASM::QImageToCvMat() - Conversion requires cloning so we don't modify the original QImage data";
+                    qWarning() << "ASM::QImageToCvMat_pxw() - Conversion requires cloning so we don't modify the original QImage data";
                 }
 
                 QImage swapped = inImage.rgbSwapped();
@@ -248,7 +248,7 @@ namespace ASM {
              }
 
              default:
-                 qWarning() << "ASM::QImageToCvMat() - QImage format not handled in switch:" << inImage.format();
+                 qWarning() << "ASM::QImageToCvMat_pxw() - QImage format not handled in switch:" << inImage.format();
                  break;
         }
 
@@ -260,7 +260,7 @@ namespace ASM {
     //    NOTE: Format_RGB888 is an exception since we need to use a local QImage and thus must clone the data regardless
     inline cv::Mat QPixmapToCvMat(const QPixmap &inPixmap, bool inCloneImageData = true)
     {
-        return QImageToCvMat(inPixmap.toImage(), inCloneImageData);
+        return QImageToCvMat_pxw(inPixmap.toImage(), inCloneImageData);
     }
 }
 

@@ -20,7 +20,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 
-constexpr bool DEBUG = 0;
+constexpr bool DEBUG = 1;
 
 /*
     Endianness
@@ -197,7 +197,7 @@ namespace ASM {
                              static_cast<size_t>(inImage.bytesPerLine())
                              );
 
-                 memcpy(mat.data, inImage.bits(), size_t(inImage.height() * inImage.width()) * sizeof (uchar));
+                 // memcpy(mat.data, inImage.bits(), size_t(inImage.height() * inImage.width()) * sizeof (uchar));
 
                  if (DEBUG) cv::imwrite("tmp/mat_converted.png", mat);
                  return (inCloneImageData ? mat.clone() : mat);

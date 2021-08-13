@@ -4,9 +4,11 @@
 #include <QRectF>
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
+
+#include "asm_opencv.h"
 #include "image-item.h"
 
-constexpr int DEBUG = 0;
+constexpr int DEBUG1 = 1;
 
 ImageItem::ImageItem() : cur_pose(QPointF(0, 0))
 {
@@ -18,6 +20,14 @@ ImageItem::ImageItem() : cur_pose(QPointF(0, 0))
 
 ImageItem::~ImageItem() {
 
+}
+
+void ImageItem::bindQImageMat()
+{
+    m_mat_filtered = ASM::QImageToCvMat(m_image_part2draw);
+    m_mat = ASM::QImageToCvMat(m_image);
+    if (DEBUG1) cv::imwrite("m_mat_filtered_binded.png", m_mat_filtered);
+    if (DEBUG1) cv::imwrite("m_mat_binded.png", m_mat);
 }
 
 QRectF
@@ -46,19 +56,19 @@ ImageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
             m_image_part2draw.save("tmp/outGray.png");
         }*/
         // QImage img = m_image_part2draw.convertToFormat(QImage::Format_ARGB32, Qt::ImageConversionFlag::ColorOnly);
-        // if (DEBUG) img.save("tmp/befor_draw.png");
+        // if (DEBUG1) img.save("tmp/befor_draw.png");
         // painter->drawImage(cur_pose, img, boundingRect(), flag);
-        if (DEBUG) if (!QFileInfo::exists(QString("tmp/%1").arg(intptr_t(this)))) {
+        if (DEBUG1) if (!QFileInfo::exists(QString("tmp/%1").arg(intptr_t(this)))) {
             //qDebug() << QString("tmp/%1").arg(intptr_t(this));
             //QDir dir(QString("tmp/%1").arg(intptr_t(this)));
             //dir.mkdir(QString("tmp/%1").arg(intptr_t(this)));
             QDir().mkdir(QString("tmp/%1").arg(intptr_t(this)));
         }
         /*m_pmap = QPixmap::fromImage(m_image_part2draw);
-        // if (DEBUG) m_image_part2draw.save("tmp/befor_draw.png");
-        if (DEBUG) m_image_part2draw.save(QString("tmp/%1/%2").arg(intptr_t(this)).arg("befor_draw.png"));
-        //  if (DEBUG) m_pmap.save("tmp/befor_draw.bmp");
-        if (DEBUG) m_pmap.save(QString("tmp/%1/%2").arg(intptr_t(this)).arg("befor_draw.bmp"));
+        // if (DEBUG1) m_image_part2draw.save("tmp/befor_draw.png");
+        if (DEBUG1) m_image_part2draw.save(QString("tmp/%1/%2").arg(intptr_t(this)).arg("befor_draw.png"));
+        //  if (DEBUG1) m_pmap.save("tmp/befor_draw.bmp");
+        if (DEBUG1) m_pmap.save(QString("tmp/%1/%2").arg(intptr_t(this)).arg("befor_draw.bmp"));
         painter->drawPixmap(cur_pose, m_pmap); */
         // painter->drawImage(cur_pose, m_image_part2draw); // Incorrect!!!!
         painter->drawImage(QPointF(0,0), m_image_part2draw);
@@ -68,14 +78,16 @@ ImageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 
 QImage ImageItem::setFiltered(const QImage &img)
 {
-    if (DEBUG) std::cout << "setFiltered: ";
-    if (DEBUG) std::cout << "old format: " << m_image_part2draw.format();
-    if (DEBUG) std::cout << "new format: " << img.format();
-    if (DEBUG) img.save("tmp/img_setFiltered.png");
+    if (DEBUG1) std::cout << "setFiltered: ";
+    if (DEBUG1) std::cout << "old format: " << m_image_part2draw.format();
+    if (DEBUG1) std::cout << "new format: " << img.format();
+    if (DEBUG1) img.save("tmp/img_setFiltered.png");
     m_image_part2draw = img;
-    if (DEBUG) std::cout << "became format: " << m_image_part2draw.format();
-    if (DEBUG) m_image_part2draw.save("tmp/m_image_part2draw_setFiltered.png");
+    if (DEBUG1) std::cout << "became format: " << m_image_part2draw.format();
+    if (DEBUG1) m_image_part2draw.save("tmp/m_image_part2draw_setFiltered.png");
     scene()->update();
+
+    bindQImageMat();
 
     return m_image_part2draw;
 }
