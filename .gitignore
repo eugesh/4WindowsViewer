@@ -14,10 +14,17 @@ out/*
 *.bmp
 *.jpg
 tmp
+moc_*
+ui_*
 old_exe
 form_h/*.h
 *.tif
 *.user
 *.user.*
 *.autosave
+build/
+debug/
+release/
+.vs/
+*.stash
 

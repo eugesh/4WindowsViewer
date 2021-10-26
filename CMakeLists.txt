@@ -10,6 +10,15 @@ if(UNIX)
     LINK_DIRECTORIES(/usr/local/lib/)
 endif (UNIX)
 
+if(WIN32)
+    SET(OpenCV_DIR D:/opencv/ocv_4_1/vc15/Build_vs15/opencv)
+    if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+        LINK_DIRECTORIES(D:/opencv/ocv_4_1/vc15/Build_vs15/opencv/bin/Debug)
+    else ()
+        LINK_DIRECTORIES(D:/opencv/ocv_4_1/vc15/Build_vs15/opencv/bin/Release)
+    endif ()
+endif (WIN32)
+
 find_package(PkgConfig)
 find_package(OpenCV REQUIRED)
 
@@ -55,6 +64,10 @@ set(raster_view_resource_files
 #    FILES
 #        ${raster_view_resource_files}
 #)
+
+if (WIN32)
+    target_link_libraries(raster_view ${OpenCV_LIBS} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL) # Qt::PrintSupport
+endif()
 
 if (UNIX)
     target_link_libraries(raster_view ${OpenCV_LIBS} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL stdc++ m) # Qt::PrintSupport

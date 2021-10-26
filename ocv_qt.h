@@ -53,12 +53,12 @@ std::vector<QPoint> pointsConverter(const std::vector<cv::Point2i> &pointsIn)
 
 int qt2cvImageFormat(int qtFormat)
 {
-
+    return 0;
 }
 
 int cv2qtImageFormat(int cvFormat)
 {
-
+    return 0;
 }
 
 cv::Mat imageConverter(const QImage &qimage)

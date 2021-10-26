@@ -135,8 +135,8 @@ QImage calc_projection_4points_ocv(cv::Mat &matrix,
                                      int method = 0, double ransacReprojThreshold = 3,
                                      OutputArray mask=noArray(), const int maxIters = 2000,
                                      const double confidence = 0.995);*/
-    if (points1.size() != points2.size() or points1.empty() or points2.empty()
-        or points1.size() < 4 or points2.size() < 4)
+    if (points1.size() != points2.size() || points1.empty() || points2.empty()
+        || points1.size() < 4 || points2.size() < 4)
         return {};
 
     if (DEBUG2) {

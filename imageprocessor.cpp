@@ -85,7 +85,7 @@ QImage getChannel(const QImage &InImg, ColorSpace cs, int ch)
 
 QImage getBWThresholded()
 {
-
+    return QImage();
 }
 
 QImage getChannel(const QImage & InImg, ColorName chName)
